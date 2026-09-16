@@ -139,52 +139,42 @@ const c = 3
     expect(report.added?.['logo.bin']).toBeUndefined()
   }, 60_000)
 
-  /**
-   * A repository holding nothing cloc can count, for which it writes no report
-   * file at all. Returns the range and a cleanup.
-   */
-  const uncountableRepo = () => {
-    const bare = mkdtempSync(join(tmpdir(), 'cloc-bare-'))
-    const bareGit = (...args: string[]) =>
-      execFileSync('git', args, { cwd: bare, encoding: 'utf8' }).trim()
-
-    bareGit('init', '-q', '-b', 'main')
-    bareGit('config', 'user.email', 'test@example.com')
-    bareGit('config', 'user.name', 'Test')
-    writeFileSync(join(bare, 'one.bin'), '\u0000\u0001')
-    bareGit('add', '-A')
-    bareGit('commit', '-q', '-m', 'binary only')
-    const base = bareGit('rev-parse', 'HEAD')
-    writeFileSync(join(bare, 'two.bin'), '\u0002\u0003')
-    bareGit('add', '-A')
-    bareGit('commit', '-q', '-m', 'another binary')
-    const head = bareGit('rev-parse', 'HEAD')
-
-    return {
-      cwd: bare,
-      base,
-      head,
-      cleanup: () => rmSync(bare, { recursive: true, force: true }),
-    }
-  }
-
   it('resolves to an empty report when the range holds nothing countable', async () => {
     // Deliberately asserts the outcome, not the mechanism: cloc 2.10 signals
     // this with a `{}` report and 2.06 by writing no file, and both must read
     // as no counted lines.
-    const { cwd, base, head, cleanup } = uncountableRepo()
+    //
+    // Needs its own repository, since the shared one holds countable files.
+    const { bare, base, head } = (() => {
+      const dir = mkdtempSync(join(tmpdir(), 'cloc-bare-'))
+      const bareGit = (...args: string[]) =>
+        execFileSync('git', args, { cwd: dir, encoding: 'utf8' }).trim()
+
+      bareGit('init', '-q', '-b', 'main')
+      bareGit('config', 'user.email', 'test@example.com')
+      bareGit('config', 'user.name', 'Test')
+      writeFileSync(join(dir, 'one.bin'), '\u0000\u0001')
+      bareGit('add', '-A')
+      bareGit('commit', '-q', '-m', 'binary only')
+      const from = bareGit('rev-parse', 'HEAD')
+      writeFileSync(join(dir, 'two.bin'), '\u0002\u0003')
+      bareGit('add', '-A')
+      bareGit('commit', '-q', '-m', 'another binary')
+
+      return { bare: dir, base: from, head: bareGit('rev-parse', 'HEAD') }
+    })()
 
     try {
       await expect(
         runClocDiff({
           baseSha: base,
           headSha: head,
-          cwd,
+          cwd: bare,
           reportPath: join(cache, 'bare.json'),
         })
       ).resolves.toEqual({})
     } finally {
-      cleanup()
+      rmSync(bare, { recursive: true, force: true })
     }
   }, 60_000)
 })

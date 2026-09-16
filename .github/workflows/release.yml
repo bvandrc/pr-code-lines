@@ -1,0 +1,26 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  major-tag:
+    name: Move the major tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # Consumers pin `@v1`, so that tag has to follow each v1.x.y release.
+      - name: Retag
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          major="${TAG%%.*}"
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git tag -f "$major" "$TAG"
+          git push -f origin "$major"

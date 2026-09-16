@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run ts:check
+      - run: npm run test:unit
+
+      # A JS action runs the committed bundle, so a dist/ that lags behind src/
+      # ships the old behaviour while the diff shows the new one. Rebuild and
+      # fail if anything moved.
+      - name: Verify dist/ is current
+        run: |
+          npm run build
+          if ! git diff --exit-code --stat -- dist; then
+            echo "::error::dist/ is out of date -- run 'npm run build' and commit the result."
+            exit 1
+          fi
+
+  self-test:
+    name: Self-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # both ends of the range have to be in the clone
+
+      # Dogfood: the action counts its own pull request. Nothing is posted
+      # yet, so assert it produced counts rather than reading a comment.
+      - id: count
+        uses: ./
+      - name: Assert it counted something
+        env:
+          REPORT: ${{ steps.count.outputs.json }}
+        run: |
+          echo "$REPORT" | head -c 400; echo
+          node -e '
+            const r = JSON.parse(process.env.REPORT || "{}")
+            const files = Object.keys(r.added ?? {}).filter((k) => k !== "SUM" && k !== "header")
+            if (files.length === 0) throw new Error("cloc reported no added files for this PR")
+            console.log(`counted ${files.length} files`)
+          '

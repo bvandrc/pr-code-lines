@@ -1,0 +1,23 @@
+name: PR Code Lines
+description: Count the code lines a pull request changes, with comments and blank lines separated.
+author: bvandrc
+
+branding:
+  icon: bar-chart-2
+  color: purple
+
+inputs:
+  base-sha:
+    description: Revision to count from. Defaults to the pull request's base; the merge base of the two is what actually gets counted.
+    default: ''
+  head-sha:
+    description: Revision to count to. Defaults to the pull request's head.
+    default: ''
+
+outputs:
+  json:
+    description: cloc's per-file diff, as `{added,modified,removed,same}` keyed by repo-relative path, each holding `{code,comment,blank}`.
+
+runs:
+  using: node24
+  main: dist/index.cjs

@@ -1,0 +1,171 @@
+import { execFileSync } from 'node:child_process'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+
+import { type ClocDiffReport, runClocDiff } from '../cloc.ts'
+
+/**
+ * Drives the real cloc against real git history. The counting is cloc's, but
+ * which cloc we get and how we invoke it is ours, and neither is observable
+ * from a fixture.
+ */
+describe('runClocDiff', () => {
+  let repo: string
+  let cache: string
+
+  const git = (...args: string[]) =>
+    execFileSync('git', args, { cwd: repo, encoding: 'utf8' }).trim()
+
+  const commit = (message: string) => {
+    git('add', '-A')
+    git('commit', '-q', '-m', message)
+    return git('rev-parse', 'HEAD')
+  }
+
+  const write = (file: string, body: string) =>
+    writeFileSync(join(repo, file), body)
+
+  beforeAll(() => {
+    repo = mkdtempSync(join(tmpdir(), 'cloc-repo-'))
+    cache = mkdtempSync(join(tmpdir(), 'cloc-cache-'))
+    // @actions/tool-cache reads these; a real runner always sets them.
+    process.env.RUNNER_TOOL_CACHE = cache
+    process.env.RUNNER_TEMP = cache
+
+    git('init', '-q', '-b', 'main')
+    git('config', 'user.email', 'test@example.com')
+    git('config', 'user.name', 'Test')
+  })
+
+  afterAll(() => {
+    for (const dir of [repo, cache])
+      rmSync(dir, { recursive: true, force: true })
+  })
+
+  const countBetween = (
+    baseSha: string,
+    headSha: string
+  ): Promise<ClocDiffReport> =>
+    runClocDiff({
+      baseSha,
+      headSha,
+      cwd: repo,
+      reportPath: join(cache, 'report.json'),
+    })
+
+  it('separates code from comments and blank lines', async () => {
+    write('a.ts', 'const a = 1\n')
+    const base = commit('base')
+
+    write(
+      'a.ts',
+      [
+        'const a = 1',
+        '',
+        '// two',
+        '// comment lines',
+        'const b = 2',
+        'const c = 3',
+        '',
+      ].join('\n')
+    )
+    const head = commit('add code and comments')
+
+    const report = await countBetween(base, head)
+
+    expect(report.added?.['a.ts']).toEqual({
+      nFiles: 0,
+      code: 2,
+      comment: 2,
+      blank: 1,
+    })
+  }, 60_000)
+
+  it('does not read a `//` inside a string as a comment', async () => {
+    write('url.ts', 'const x = 1\n')
+    const base = commit('before url')
+
+    write('url.ts', "const x = 1\nconst u = 'https://example.com'\n")
+    const head = commit('add a url')
+
+    const report = await countBetween(base, head)
+
+    expect(report.added?.['url.ts']).toMatchObject({ code: 1, comment: 0 })
+  }, 60_000)
+
+  /**
+   * The regression this pin exists for: cloc 1.86 — which the npm `cloc@2.06`
+   * package installs — reads a rename as the whole file added plus the whole
+   * file deleted, overstating a moved file by its entire length.
+   */
+  it('counts a pure rename as a rename, not a whole file added and deleted', async () => {
+    const body = [
+      ...Array.from({ length: 40 }, (_, i) => `const v${i} = ${i}`),
+      '',
+    ].join('\n')
+    write('big.ts', body)
+    const base = commit('add a file worth moving')
+
+    git('mv', 'big.ts', 'moved.ts')
+    const head = commit('move it')
+
+    const report = await countBetween(base, head)
+    const added = Object.values(report.added ?? {}).reduce(
+      (sum, c) => sum + c.code,
+      0
+    )
+    const removed = Object.values(report.removed ?? {}).reduce(
+      (sum, c) => sum + c.code,
+      0
+    )
+
+    expect(added).toBe(0)
+    expect(removed).toBe(0)
+  }, 60_000)
+
+  it('gives a binary file no counts of its own', async () => {
+    const base = git('rev-parse', 'HEAD')
+    write('logo.bin', '\u0000\u0001\u0002')
+    const head = commit('add a binary file')
+
+    const report = await countBetween(base, head)
+
+    expect(report.added?.['logo.bin']).toBeUndefined()
+  }, 60_000)
+
+  it('resolves to an empty report when cloc writes none at all', async () => {
+    // cloc writes no report file rather than an empty one when neither
+    // revision holds a single countable file, so the parse has to tolerate a
+    // missing path rather than throw.
+    const bare = mkdtempSync(join(tmpdir(), 'cloc-bare-'))
+    const bareGit = (...args: string[]) =>
+      execFileSync('git', args, { cwd: bare, encoding: 'utf8' }).trim()
+
+    bareGit('init', '-q', '-b', 'main')
+    bareGit('config', 'user.email', 'test@example.com')
+    bareGit('config', 'user.name', 'Test')
+    writeFileSync(join(bare, 'one.bin'), '\u0000\u0001')
+    bareGit('add', '-A')
+    bareGit('commit', '-q', '-m', 'binary only')
+    const base = bareGit('rev-parse', 'HEAD')
+    writeFileSync(join(bare, 'two.bin'), '\u0002\u0003')
+    bareGit('add', '-A')
+    bareGit('commit', '-q', '-m', 'another binary')
+    const head = bareGit('rev-parse', 'HEAD')
+
+    try {
+      await expect(
+        runClocDiff({
+          baseSha: base,
+          headSha: head,
+          cwd: bare,
+          reportPath: join(cache, 'bare.json'),
+        })
+      ).resolves.toEqual({})
+    } finally {
+      rmSync(bare, { recursive: true, force: true })
+    }
+  }, 60_000)
+})

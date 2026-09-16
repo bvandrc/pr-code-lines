@@ -13,6 +13,22 @@ Conventions live outside this file, synced from https://github.com/bvandrc/bvand
 
 `biome.jsonc` extends `conventions/biome.base.json`, so the lint and format rules are synced too rather than restated here. The only local addition is excluding the build output from checks.
 
+## Commands
+
+| Command             | Purpose                                        |
+| ------------------- | ---------------------------------------------- |
+| `npm run build`     | Bundle `src/` to `dist/index.cjs` with esbuild |
+| `npm run test:unit` | Vitest unit tests                              |
+| `npm run lint`      | Biome lint                                     |
+| `npm run format`    | Biome format — **run before every commit**     |
+| `npm run ts:check`  | TypeScript check                               |
+| `npm run check`     | ts + lint + tests                              |
+
 ## Gotchas
 
 - **`dist/` is committed on purpose**: a JS action runs its bundle, not its source, so the build cannot be gitignored. `.gitattributes` marks it `linguist-generated` to keep it out of language stats and collapsed in diffs.
+- **Rebuild `dist/` in the same change as `src/`**: CI fails if the bundle lags behind the source, since the action runs the bundle.
+- **The bundle must stay CommonJS at a `.cjs` path**: `package.json` sets `"type": "module"`, so a CJS bundle at `dist/index.js` is loaded as ESM and throws `require is not defined`.
+- **`cloc`'s npm package is not versioned like `cloc`**: the registry's `cloc` package numbers its releases independently of the tool it bundles — `cloc@2.06` ships cloc **1.86**, which reads a rename as a whole file added plus a whole file deleted. `src/cloc.ts` pins upstream's release script by URL and sha256 instead; keep it that way. cloc has no programmatic API and never will (it is Perl), and the JS counters that do have one — `sloc` and friends — neither diff two revisions nor survive a `//` inside a string, so a subprocess is the design, not a stopgap.
+- **`src/__tests__/cloc.test.ts` drives the real cloc against real git history**: it builds throwaway repositories, so it needs `git` and network on first run. The rename case is the regression test for the version trap above.
+- **Verify against a real runner, not just unit tests**: build the bundle and run `dist/index.cjs` against a real repository with `INPUT_*`, `RUNNER_TOOL_CACHE`, `RUNNER_TEMP`, `GITHUB_OUTPUT` and `GITHUB_STEP_SUMMARY` set. Every bug found so far was invisible to unit tests.

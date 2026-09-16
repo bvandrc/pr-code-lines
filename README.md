@@ -36,10 +36,10 @@ jobs:
 | --- | --- | --- |
 | `base-sha` | the PR's base | Revision to count from. The merge base of the two is what gets counted. |
 | `head-sha` | the PR's head | Revision to count to. |
-| `test-patterns` | see `action.yml` | Globs counted as tests, one per line. |
-| `generated-patterns` | see `action.yml` | Globs counted as generated, one per line. |
-| `docs-patterns` | see `action.yml` | Globs counted as docs, one per line. |
-| `config-patterns` | see `action.yml` | Globs counted as config, one per line. |
+| `test-patterns` | see `action.yml` | Globs counted as tests. |
+| `generated-patterns` | see `action.yml` | Globs counted as generated. |
+| `docs-patterns` | see `action.yml` | Globs counted as docs. |
+| `config-patterns` | see `action.yml` | Globs counted as config. |
 
 Set both revisions to run outside a `pull_request` event.
 
@@ -50,6 +50,8 @@ The four pattern inputs are matched **in that order — tests, then generated, t
 `docs` is prose (`**/*.md`, `**/docs/**`, `LICENSE*`) and `config` is machine-read (`**/*.json`, `**/*.yml`, `**/.github/**`, `Dockerfile*`). They're separate because a 400-line `tsconfig.json` and a 400-line design doc are different news, and lumping them together made a workflow change read as documentation.
 
 The defaults cover the usual conventions across ecosystems (`**/__tests__/**`, `**/*_test.go`, `**/package-lock.json`, `**/dist/**`, …) and live in `action.yml`. Setting an input replaces that category's list rather than adding to it.
+
+Each pattern input takes **one glob per line** — a newline is the only separator, because a brace glob such as `**/*.{js,ts}` contains a comma of its own.
 
 ## Output
 

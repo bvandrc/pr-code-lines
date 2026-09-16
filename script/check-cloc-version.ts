@@ -9,12 +9,34 @@
 
 import { createHash } from 'node:crypto'
 import { appendFile, readFile, writeFile } from 'node:fs/promises'
+import { z } from 'zod'
 
 const PIN_FILE = new URL('../src/cloc/pin.json', import.meta.url)
 const LATEST_RELEASE =
   'https://api.github.com/repos/AlDanial/cloc/releases/latest'
 
-type Pin = { version: string; sha256: string }
+const pinSchema = z.object({
+  version: z.string().min(1),
+  sha256: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/, 'must be a 64-character hex digest'),
+})
+
+type Pin = z.infer<typeof pinSchema>
+
+/** Reads a pin, or says which field is wrong rather than failing later on a 404. */
+async function readPin(): Promise<Pin> {
+  const parsed = pinSchema.safeParse(
+    JSON.parse(await readFile(PIN_FILE, 'utf8'))
+  )
+  if (!parsed.success) {
+    throw new Error(
+      `${PIN_FILE.pathname} is not a valid pin:\n${z.prettifyError(parsed.error)}`
+    )
+  }
+
+  return parsed.data
+}
 
 const scriptUrl = (version: string) =>
   `https://github.com/AlDanial/cloc/releases/download/v${version}/cloc-${version}.pl`
@@ -65,10 +87,7 @@ async function report(outputs: Record<string, string>): Promise<void> {
 }
 
 async function run(): Promise<void> {
-  const pin = JSON.parse(await readFile(PIN_FILE, 'utf8')) as Pin
-  if (typeof pin.version !== 'string' || typeof pin.sha256 !== 'string') {
-    throw new Error(`${PIN_FILE.pathname} is not a { version, sha256 } pin`)
-  }
+  const pin = await readPin()
 
   const latest = await latestVersion()
   if (latest === pin.version) {
@@ -81,7 +100,9 @@ async function run(): Promise<void> {
   // should leave the pin alone rather than half-updated.
   const sha256 = await sha256Of(scriptUrl(latest))
 
-  const next: Pin = { version: latest, sha256 }
+  // Validated on the way out too: this runs unattended, and a malformed pin
+  // committed to a branch would fail every consumer rather than just this job.
+  const next = pinSchema.parse({ version: latest, sha256 })
   await writeFile(PIN_FILE, `${JSON.stringify(next, null, 2)}\n`)
 
   console.log(`cloc v${pin.version} -> v${latest} (sha256 ${sha256})`)

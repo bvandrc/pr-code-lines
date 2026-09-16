@@ -9,7 +9,7 @@ Conventions live outside this file, synced from https://github.com/bvandrc/bvand
 @conventions/typescript.md — language-level TypeScript/JavaScript rules
 @conventions/all.md — practice for every repo: branches, formatting, markdown, PR reviews
 
-No `react.md` or `playwright.md`: this repo has neither. `.github/workflows/sync-conventions.yml` refreshes the directory weekly, overwriting whatever is there — edit a rule upstream, never in `conventions/`.
+`conventions/` is overwritten on every sync. Edit a rule upstream, never in that directory.
 
 `biome.jsonc` extends `conventions/biome.base.json`, so the lint and format rules are synced too rather than restated here. The only local addition is excluding the build output from checks.
 

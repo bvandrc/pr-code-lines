@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { info, setFailed, setOutput } from '@actions/core'
 
-import { runClocDiff } from './cloc.ts'
+import { runClocDiff } from './cloc/run.ts'
 import { resolveShaRange } from './sha.ts'
 
 async function run(): Promise<void> {

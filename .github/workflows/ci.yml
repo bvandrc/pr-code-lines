@@ -13,8 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
-    name: Check
+  static:
+    name: Lint & Types
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -22,11 +22,33 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-
       - run: npm ci
-      - run: npm run lint
-      - run: npm run ts:check
+      - run: npm run check
+
+  unit:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm ci
+      # The cloc tests fetch the pinned script and build throwaway git
+      # repositories, so this job needs network and git, not just node.
       - run: npm run test:unit
+
+  bundle:
+    name: Bundle Current
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm ci
 
       # A JS action runs the committed bundle, so a dist/ that lags behind src/
       # ships the old behaviour while the diff shows the new one. Rebuild and

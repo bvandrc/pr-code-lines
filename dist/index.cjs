@@ -23690,7 +23690,10 @@ function info(message) {
   process.stdout.write(message + os5.EOL);
 }
 
-// src/cloc.ts
+// src/cloc/run.ts
+var import_promises2 = require("node:fs/promises");
+
+// src/cloc/download.ts
 var import_node_crypto = require("node:crypto");
 var import_promises = require("node:fs/promises");
 var import_node_path = require("node:path");
@@ -24006,7 +24009,7 @@ function _getGlobal(key, defaultValue) {
   return value !== void 0 ? value : defaultValue;
 }
 
-// src/cloc.ts
+// src/cloc/download.ts
 var CLOC_VERSION = "2.10";
 var CLOC_URL = `https://github.com/AlDanial/cloc/releases/download/v${CLOC_VERSION}/cloc-${CLOC_VERSION}.pl`;
 var CLOC_SHA256 = "bf59272455172108072a0a106379f7509fd4349bdcfd85203bac038ccd286d83";
@@ -24024,6 +24027,8 @@ async function downloadCloc() {
   const dir = await cacheFile(downloaded, "cloc.pl", "cloc", CLOC_VERSION);
   return (0, import_node_path.join)(dir, "cloc.pl");
 }
+
+// src/cloc/run.ts
 async function assertPerl() {
   const code = await exec("perl", ["--version"], {
     ignoreReturnCode: true,
@@ -24054,7 +24059,7 @@ async function runClocDiff(options) {
     { cwd }
   );
   try {
-    return JSON.parse(await (0, import_promises.readFile)(reportPath, "utf8"));
+    return JSON.parse(await (0, import_promises2.readFile)(reportPath, "utf8"));
   } catch {
     info(
       "cloc produced no report \u2014 treating the range as holding no countable lines."

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { type ClocDiffReport, runClocDiff } from '../cloc.ts'
+import { type ClocDiffReport, runClocDiff } from '../run.ts'
 
 /**
  * Drives the real cloc against real git history. The counting is cloc's, but

@@ -49,8 +49,9 @@ async function assertPerl(): Promise<void> {
 export async function runClocDiff(options: {
   baseSha: string
   headSha: string
-  cwd: string
   reportPath: string
+  /** Where to run git from. Defaults to the process's own directory. */
+  cwd?: string
 }): Promise<ClocDiffReport> {
   const { baseSha, headSha, cwd, reportPath } = options
 

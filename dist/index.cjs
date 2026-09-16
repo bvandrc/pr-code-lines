@@ -28229,7 +28229,6 @@ async function run() {
   const report = await runClocDiff({
     baseSha,
     headSha,
-    cwd: process.cwd(),
     reportPath: (0, import_node_path2.join)((0, import_node_os.tmpdir)(), "pr-code-lines.json")
   });
   setOutput("json", JSON.stringify(report));

@@ -22,7 +22,6 @@ async function run(): Promise<void> {
   const report = await runClocDiff({
     baseSha,
     headSha,
-    cwd: process.cwd(),
     reportPath: join(tmpdir(), 'pr-code-lines.json'),
   })
 

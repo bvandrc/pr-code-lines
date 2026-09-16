@@ -56,13 +56,16 @@ describe('runClocDiff', () => {
     })
 
   it('separates code from comments and blank lines', async () => {
-    write('a.ts', 'const a = 1\n')
+    const file = 'a.ts'
+    const before = 'const a = 1\n'
+
+    write(file, before)
     const base = commit('base')
 
+    // Everything after `before` is what the assertion below counts.
     write(
-      'a.ts',
-      `const a = 1
-
+      file,
+      `${before}
 // two
 // comment lines
 const b = 2
@@ -73,7 +76,7 @@ const c = 3
 
     const report = await countBetween(base, head)
 
-    expect(report.added?.['a.ts']).toEqual({
+    expect(report.added?.[file]).toEqual({
       nFiles: 0,
       code: 2,
       comment: 2,
@@ -82,15 +85,18 @@ const c = 3
   }, 60_000)
 
   it('does not read a `//` inside a string as a comment', async () => {
-    write('url.ts', 'const x = 1\n')
+    const file = 'url.ts'
+    const before = 'const x = 1\n'
+
+    write(file, before)
     const base = commit('before url')
 
-    write('url.ts', "const x = 1\nconst u = 'https://example.com'\n")
+    write(file, `${before}const u = 'https://example.com'\n`)
     const head = commit('add a url')
 
     const report = await countBetween(base, head)
 
-    expect(report.added?.['url.ts']).toMatchObject({ code: 1, comment: 0 })
+    expect(report.added?.[file]).toMatchObject({ code: 1, comment: 0 })
   }, 60_000)
 
   /**

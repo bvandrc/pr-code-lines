@@ -27,8 +27,8 @@ export type CategoryGlobs = {
 export type CategoryTally = Record<ChangeKind, ClocCounts>
 
 export type DiffTally = {
-  /** Only categories with at least one counted line, in `FILE_CATEGORIES` order. */
-  byCategory: [FileCategory, CategoryTally][]
+  /** Every category, zeroed where the diff touched nothing of that kind. */
+  byCategory: Record<FileCategory, CategoryTally>
   total: CategoryTally
 }
 
@@ -47,11 +47,6 @@ const addInto = (target: ClocCounts, source: ClocCounts) => {
   target.blank += source.blank
 }
 
-const hasAnyLine = (tally: CategoryTally) =>
-  CHANGE_KINDS.some(
-    (kind) => tally[kind].code + tally[kind].comment + tally[kind].blank > 0
-  )
-
 /**
  * First match wins, so a spec file under a generated directory is still a test.
  * `dot: true` because plenty of real paths are under `.github/` or `.config/`,
@@ -67,13 +62,19 @@ const buildMatchers = (globs: CategoryGlobs) =>
       [category, picomatch(patterns as string[], { dot: true })] as const
   ) as ReadonlyArray<readonly [FileCategory, (path: string) => boolean]>
 
-/** Sums a cloc diff into one tally per category, dropping categories with no lines. */
+/**
+ * Sums a cloc diff into one tally per category. Every category is present
+ * whether or not the diff touched it, so a caller reading one never has to
+ * tell "no lines" apart from "key absent".
+ */
 export function tallyDiff(
   report: ClocDiffReport,
   globs: CategoryGlobs
 ): DiffTally {
   const matchers = buildMatchers(globs)
-  const tallies = new Map<FileCategory, CategoryTally>()
+  const byCategory = Object.fromEntries(
+    FILE_CATEGORIES.map((category) => [category, emptyTally()])
+  ) as Record<FileCategory, CategoryTally>
   const total = emptyTally()
 
   for (const kind of CHANGE_KINDS) {
@@ -82,20 +83,10 @@ export function tallyDiff(
 
       const category =
         matchers.find(([, matches]) => matches(path))?.[0] ?? 'SOURCE'
-      const tally = tallies.get(category) ?? emptyTally()
-      addInto(tally[kind], counts)
+      addInto(byCategory[category][kind], counts)
       addInto(total[kind], counts)
-      tallies.set(category, tally)
     }
   }
 
-  return {
-    byCategory: FILE_CATEGORIES.flatMap((category) => {
-      const tally = tallies.get(category)
-      return tally && hasAnyLine(tally)
-        ? [[category, tally] as [FileCategory, CategoryTally]]
-        : []
-    }),
-    total,
-  }
+  return { byCategory, total }
 }

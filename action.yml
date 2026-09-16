@@ -75,24 +75,8 @@ inputs:
       **/LICENSE*
 
 outputs:
-  source-code-added:
-    description: Code lines added in source files.
-  source-code-modified:
-    description: Code lines changed in place in source files.
-  source-code-removed:
-    description: Code lines removed from source files.
-  code-added:
-    description: Code lines added across every category.
-  code-modified:
-    description: Code lines changed in place across every category.
-  code-removed:
-    description: Code lines removed across every category.
-  comment-added:
-    description: Comment lines added across every category.
-  comment-removed:
-    description: Comment lines removed across every category.
   json:
-    description: Every per-category tally as JSON, as `{byCategory,total}`.
+    description: Every count, as `{byCategory,total}` -- see the README.
 
 runs:
   using: node24

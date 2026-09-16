@@ -1,6 +1,6 @@
 /**
  * @fileoverview Action entrypoint: counts the resolved range with cloc, sorts
- * the changed files into categories, and exposes the tallies as outputs.
+ * the changed files into categories, and exposes the tally as one output.
  */
 
 import { tmpdir } from 'node:os'
@@ -39,20 +39,7 @@ async function run(): Promise<void> {
     reportPath: join(tmpdir(), 'pr-code-lines.json'),
   })
 
-  const tally = tallyDiff(report, globs)
-
-  const source = tally.byCategory.find(
-    ([category]) => category === 'SOURCE'
-  )?.[1]
-  setOutput('source-code-added', source?.added.code ?? 0)
-  setOutput('source-code-modified', source?.modified.code ?? 0)
-  setOutput('source-code-removed', source?.removed.code ?? 0)
-  setOutput('code-added', tally.total.added.code)
-  setOutput('code-modified', tally.total.modified.code)
-  setOutput('code-removed', tally.total.removed.code)
-  setOutput('comment-added', tally.total.added.comment)
-  setOutput('comment-removed', tally.total.removed.comment)
-  setOutput('json', JSON.stringify(tally))
+  setOutput('json', JSON.stringify(tallyDiff(report, globs)))
 }
 
 run().catch((error: unknown) => {

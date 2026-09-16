@@ -25,7 +25,7 @@ jobs:
       - id: lines
         uses: bvandrc/pr-code-lines@v1
 
-      - run: echo '${{ steps.lines.outputs.source-code-added }} lines of source code'
+      - run: echo '${{ fromJSON(steps.lines.outputs.json).byCategory.SOURCE.added.code }} lines of source code'
 ```
 
 `fetch-depth: 0` is required. The action counts from the **merge base** of the two revisions, not from the base branch's tip, so a PR isn't billed for commits that landed on the base after it forked — and a shallow clone doesn't have that commit.
@@ -48,25 +48,32 @@ The three pattern inputs are matched **in that order — tests, then generated, 
 
 The defaults cover the usual conventions across ecosystems (`**/__tests__/**`, `**/*_test.go`, `**/package-lock.json`, `**/dist/**`, `**/*.md`, …) and live in `action.yml`. Setting an input replaces that category's list rather than adding to it.
 
-## Outputs
+## Output
 
-| Output | Meaning |
-| --- | --- |
-| `source-code-added` / `-modified` / `-removed` | Code lines in **source** files only — the number GitHub's `+/−` buries. |
-| `code-added` / `-modified` / `-removed` | Code lines across every category. |
-| `comment-added` / `comment-removed` | Comment lines across every category. |
-| `json` | Every tally, as `{byCategory,total}`. |
-
-`json` looks like this, with untouched categories left out and each category holding one `{code,comment,blank}` per change kind:
+One output, `json`, holding every count:
 
 ```json
 {
-  "byCategory": [
-    ["SOURCE", { "added": { "code": 91, "comment": 106, "blank": 10 }, "modified": { … }, "removed": { … } }],
-    ["TESTS",  { "added": { "code": 12, "comment": 4,   "blank": 2  }, "modified": { … }, "removed": { … } }]
-  ],
+  "byCategory": {
+    "SOURCE":    { "added": { "code": 91, "comment": 106, "blank": 10 }, "modified": { … }, "removed": { … } },
+    "TESTS":     { "added": { "code": 12, "comment": 4,   "blank": 2  }, "modified": { … }, "removed": { … } },
+    "GENERATED": { … },
+    "DOCS":      { … }
+  },
   "total": { "added": { … }, "modified": { … }, "removed": { … } }
 }
+```
+
+That's the whole format: four categories plus a `total`, each with `added`, `modified` and `removed`, each of those with `code`, `comment` and `blank`. Every category is always present, zeroed where the diff touched nothing of that kind, so nothing has to tell `0` apart from a missing key.
+
+Enough to gate on, with no `jq` step:
+
+```yaml
+      - id: lines
+        uses: bvandrc/pr-code-lines@v1
+
+      - if: fromJSON(steps.lines.outputs.json).byCategory.SOURCE.added.code > 400
+        run: echo "::warning::Large PR — consider splitting it."
 ```
 
 `modified` counts a line changed in place **once**, rather than as an add plus a delete, so these numbers deliberately don't sum to GitHub's own `+/−`.

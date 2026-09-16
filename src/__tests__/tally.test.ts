@@ -4,7 +4,12 @@ import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
 
 import type { ClocDiffReport } from '../cloc/run.ts'
-import { type CategoryGlobs, tallyDiff } from '../tally.ts'
+import {
+  type CategoryGlobs,
+  type DiffTally,
+  FILE_CATEGORIES,
+  tallyDiff,
+} from '../tally.ts'
 
 type Counts = { code?: number; comment?: number; blank?: number }
 
@@ -26,6 +31,15 @@ const clocReport = (sections: {
       Object.fromEntries(
         Object.entries(files).map(([file, c]) => [file, counts(c)])
       ),
+    ])
+  )
+
+/** Each category's added code, which is what most of these cases turn on. */
+const codePerCategory = (tally: DiffTally) =>
+  Object.fromEntries(
+    Object.entries(tally.byCategory).map(([category, t]) => [
+      category,
+      t.added.code,
     ])
   )
 
@@ -63,11 +77,8 @@ describe('tallyDiff', () => {
       GLOBS
     )
 
-    const byCategory = Object.fromEntries(
-      tally.byCategory.map(([category, t]) => [category, t.added.code])
-    )
     // `Makefile` matches no glob, so it lands in source alongside thing.ts.
-    expect(byCategory).toEqual({
+    expect(codePerCategory(tally)).toEqual({
       SOURCE: 8,
       TESTS: 50,
       GENERATED: 912,
@@ -83,7 +94,12 @@ describe('tallyDiff', () => {
       GLOBS
     )
 
-    expect(tally.byCategory).toEqual([['TESTS', expect.objectContaining({})]])
+    expect(codePerCategory(tally)).toEqual({
+      SOURCE: 0,
+      TESTS: 9,
+      GENERATED: 0,
+      DOCS: 0,
+    })
   })
 
   it('matches dotfile directories, which a default glob would skip', () => {
@@ -95,7 +111,8 @@ describe('tallyDiff', () => {
       }
     )
 
-    expect(tally.byCategory.map(([category]) => category)).toEqual(['DOCS'])
+    expect(tally.byCategory.DOCS.added.code).toBe(20)
+    expect(tally.byCategory.SOURCE.added.code).toBe(0)
   })
 
   it("ignores cloc's SUM and header siblings of the per-file entries", () => {
@@ -113,13 +130,19 @@ describe('tallyDiff', () => {
     expect(tally.total.added.code).toBe(5)
   })
 
-  it('drops categories whose every count is zero', () => {
+  it('reports every category, zeroed where the diff touched nothing', () => {
     const tally = tallyDiff(
-      clocReport({ added: { 'logo.png': {}, 'src/a.ts': { code: 2 } } }),
+      clocReport({ added: { 'src/a.ts': { code: 2 } } }),
       GLOBS
     )
 
-    expect(tally.byCategory.map(([category]) => category)).toEqual(['SOURCE'])
+    // A caller reading one category never has to tell 0 from a missing key.
+    expect(codePerCategory(tally)).toEqual({
+      SOURCE: 2,
+      TESTS: 0,
+      GENERATED: 0,
+      DOCS: 0,
+    })
   })
 
   it('sums each change kind separately', () => {
@@ -163,7 +186,9 @@ describe("action.yml's default patterns", () => {
       clocReport({ added: { [file]: { code: 1 } } }),
       DEFAULT_GLOBS
     )
-    return tally.byCategory[0]?.[0]
+    return FILE_CATEGORIES.find(
+      (category) => tally.byCategory[category].added.code > 0
+    )
   }
 
   it.each([

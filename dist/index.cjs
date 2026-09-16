@@ -49722,9 +49722,6 @@ var addInto = (target, source) => {
   target.comment += source.comment;
   target.blank += source.blank;
 };
-var hasAnyLine = (tally) => CHANGE_KINDS.some(
-  (kind) => tally[kind].code + tally[kind].comment + tally[kind].blank > 0
-);
 var buildMatchers = (globs) => [
   ["TESTS", globs.tests],
   ["GENERATED", globs.generated],
@@ -49734,25 +49731,19 @@ var buildMatchers = (globs) => [
 );
 function tallyDiff(report, globs) {
   const matchers = buildMatchers(globs);
-  const tallies = /* @__PURE__ */ new Map();
+  const byCategory = Object.fromEntries(
+    FILE_CATEGORIES.map((category) => [category, emptyTally()])
+  );
   const total = emptyTally();
   for (const kind of CHANGE_KINDS) {
     for (const [path5, counts] of Object.entries(report[kind] ?? {})) {
       if (NON_FILE_KEYS.has(path5)) continue;
       const category = matchers.find(([, matches]) => matches(path5))?.[0] ?? "SOURCE";
-      const tally = tallies.get(category) ?? emptyTally();
-      addInto(tally[kind], counts);
+      addInto(byCategory[category][kind], counts);
       addInto(total[kind], counts);
-      tallies.set(category, tally);
     }
   }
-  return {
-    byCategory: FILE_CATEGORIES.flatMap((category) => {
-      const tally = tallies.get(category);
-      return tally && hasAnyLine(tally) ? [[category, tally]] : [];
-    }),
-    total
-  };
+  return { byCategory, total };
 }
 
 // src/index.ts
@@ -49774,19 +49765,7 @@ async function run() {
     headSha,
     reportPath: (0, import_node_path2.join)((0, import_node_os.tmpdir)(), "pr-code-lines.json")
   });
-  const tally = tallyDiff(report, globs);
-  const source = tally.byCategory.find(
-    ([category]) => category === "SOURCE"
-  )?.[1];
-  setOutput("source-code-added", source?.added.code ?? 0);
-  setOutput("source-code-modified", source?.modified.code ?? 0);
-  setOutput("source-code-removed", source?.removed.code ?? 0);
-  setOutput("code-added", tally.total.added.code);
-  setOutput("code-modified", tally.total.modified.code);
-  setOutput("code-removed", tally.total.removed.code);
-  setOutput("comment-added", tally.total.added.comment);
-  setOutput("comment-removed", tally.total.removed.comment);
-  setOutput("json", JSON.stringify(tally));
+  setOutput("json", JSON.stringify(tallyDiff(report, globs)));
 }
 run().catch((error63) => {
   setFailed(error63 instanceof Error ? error63.message : String(error63));

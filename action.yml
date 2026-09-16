@@ -14,9 +14,9 @@ inputs:
     description: Revision to count to. Defaults to the pull request's head.
     default: ''
 
-  # Matched in order -- tests, then generated, then docs -- and the first match
-  # wins, so a spec file under a generated directory still counts as a test.
-  # Anything matching none of them counts as source.
+  # Matched in order -- tests, then generated, then docs, then config -- and the
+  # first match wins, so a spec file under a generated directory still counts as
+  # a test. Anything matching none of them counts as source.
   test-patterns:
     description: Globs counted as tests, one per line.
     default: |
@@ -57,7 +57,7 @@ inputs:
       **/*.g.dart
       **/*.freezed.dart
   docs-patterns:
-    description: Globs counted as docs and config, one per line.
+    description: Globs counted as docs, one per line.
     default: |
       **/*.md
       **/*.mdx
@@ -65,14 +65,20 @@ inputs:
       **/*.adoc
       **/*.txt
       **/docs/**
+      **/LICENSE*
+  config-patterns:
+    description: Globs counted as config, one per line.
+    default: |
       **/*.json
       **/*.yml
       **/*.yaml
       **/*.toml
       **/*.ini
       **/*.cfg
+      **/.editorconfig
       **/.github/**
-      **/LICENSE*
+      **/Dockerfile*
+      **/*.tfvars
 
 outputs:
   json:

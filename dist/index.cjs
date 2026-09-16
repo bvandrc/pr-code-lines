@@ -49710,7 +49710,13 @@ async function resolveShaRange({
 
 // src/tally.ts
 var import_picomatch = __toESM(require_picomatch2(), 1);
-var FILE_CATEGORIES = ["SOURCE", "TESTS", "GENERATED", "DOCS"];
+var FILE_CATEGORIES = [
+  "SOURCE",
+  "TESTS",
+  "GENERATED",
+  "DOCS",
+  "CONFIG"
+];
 var NON_FILE_KEYS = /* @__PURE__ */ new Set(["SUM", "header"]);
 var emptyTally = () => ({
   added: { code: 0, comment: 0, blank: 0 },
@@ -49725,7 +49731,8 @@ var addInto = (target, source) => {
 var buildMatchers = (globs) => [
   ["TESTS", globs.tests],
   ["GENERATED", globs.generated],
-  ["DOCS", globs.docs]
+  ["DOCS", globs.docs],
+  ["CONFIG", globs.config]
 ].map(
   ([category, patterns]) => [category, (0, import_picomatch.default)(patterns, { dot: true })]
 );
@@ -49752,7 +49759,8 @@ async function run() {
   const globs = {
     tests: readGlobs("test-patterns"),
     generated: readGlobs("generated-patterns"),
-    docs: readGlobs("docs-patterns")
+    docs: readGlobs("docs-patterns"),
+    config: readGlobs("config-patterns")
   };
   const pullRequest = context2.payload.pull_request;
   const { baseSha, headSha } = await resolveShaRange({

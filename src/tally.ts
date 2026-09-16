@@ -2,7 +2,8 @@
  * @fileoverview Sums `cloc --diff --by-file --json` output into one tally per
  * category. GitHub's own +/- counts every line a diff touches, so 300 lines of
  * doc comments reads the same as 300 lines of logic; this splits code from
- * comments and blank lines, and source from tests, generated files and docs.
+ * comments and blank lines, and source from tests, generated files, docs and
+ * config.
  */
 
 import picomatch from 'picomatch'
@@ -14,7 +15,13 @@ import {
   type ClocDiffReport,
 } from './cloc/run.ts'
 
-export const FILE_CATEGORIES = ['SOURCE', 'TESTS', 'GENERATED', 'DOCS'] as const
+export const FILE_CATEGORIES = [
+  'SOURCE',
+  'TESTS',
+  'GENERATED',
+  'DOCS',
+  'CONFIG',
+] as const
 export type FileCategory = (typeof FILE_CATEGORIES)[number]
 
 /** Globs deciding what is what. Anything matching none of them counts as source. */
@@ -22,6 +29,7 @@ export type CategoryGlobs = {
   tests: string[]
   generated: string[]
   docs: string[]
+  config: string[]
 }
 
 export type CategoryTally = Record<ChangeKind, ClocCounts>
@@ -57,6 +65,7 @@ const buildMatchers = (globs: CategoryGlobs) =>
     ['TESTS', globs.tests],
     ['GENERATED', globs.generated],
     ['DOCS', globs.docs],
+    ['CONFIG', globs.config],
   ].map(
     ([category, patterns]) =>
       [category, picomatch(patterns as string[], { dot: true })] as const

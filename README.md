@@ -2,7 +2,7 @@
 
 GitHub tells you a pull request is `+329 −144`. That number counts every line the diff touches, so 300 lines of doc comments reads exactly like 300 lines of logic, and a regenerated lockfile reads like a rewrite.
 
-This action recounts the same range with [cloc](https://github.com/AlDanial/cloc), which parses comments per language rather than guessing at them, and sorts the changed files into source, tests, generated and docs.
+This action recounts the same range with [cloc](https://github.com/AlDanial/cloc), which parses comments per language rather than guessing at them, and sorts the changed files into source, tests, generated, docs and config.
 
 > **Status**: this release counts and categorises, and exposes the tallies as outputs. Rendering the table and posting it as a PR comment land next.
 
@@ -38,15 +38,18 @@ jobs:
 | `head-sha` | the PR's head | Revision to count to. |
 | `test-patterns` | see `action.yml` | Globs counted as tests, one per line. |
 | `generated-patterns` | see `action.yml` | Globs counted as generated, one per line. |
-| `docs-patterns` | see `action.yml` | Globs counted as docs and config, one per line. |
+| `docs-patterns` | see `action.yml` | Globs counted as docs, one per line. |
+| `config-patterns` | see `action.yml` | Globs counted as config, one per line. |
 
 Set both revisions to run outside a `pull_request` event.
 
 ### Categories
 
-The three pattern inputs are matched **in that order — tests, then generated, then docs — and the first match wins**, so a spec file under a generated directory is still a test. Anything matching none of them counts as **source**, so an unfamiliar language or an extensionless file is counted rather than quietly dropped.
+The four pattern inputs are matched **in that order — tests, then generated, then docs, then config — and the first match wins**, so a spec file under a generated directory is still a test. Anything matching none of them counts as **source**, so an unfamiliar language or an extensionless file is counted rather than quietly dropped.
 
-The defaults cover the usual conventions across ecosystems (`**/__tests__/**`, `**/*_test.go`, `**/package-lock.json`, `**/dist/**`, `**/*.md`, …) and live in `action.yml`. Setting an input replaces that category's list rather than adding to it.
+`docs` is prose (`**/*.md`, `**/docs/**`, `LICENSE*`) and `config` is machine-read (`**/*.json`, `**/*.yml`, `**/.github/**`, `Dockerfile*`). They're separate because a 400-line `tsconfig.json` and a 400-line design doc are different news, and lumping them together made a workflow change read as documentation.
+
+The defaults cover the usual conventions across ecosystems (`**/__tests__/**`, `**/*_test.go`, `**/package-lock.json`, `**/dist/**`, …) and live in `action.yml`. Setting an input replaces that category's list rather than adding to it.
 
 ## Output
 
@@ -58,13 +61,14 @@ One output, `json`, holding every count:
     "SOURCE":    { "added": { "code": 91, "comment": 106, "blank": 10 }, "modified": { … }, "removed": { … } },
     "TESTS":     { "added": { "code": 12, "comment": 4,   "blank": 2  }, "modified": { … }, "removed": { … } },
     "GENERATED": { … },
-    "DOCS":      { … }
+    "DOCS":      { … },
+    "CONFIG":    { … }
   },
   "total": { "added": { … }, "modified": { … }, "removed": { … } }
 }
 ```
 
-That's the whole format: four categories plus a `total`, each with `added`, `modified` and `removed`, each of those with `code`, `comment` and `blank`. Every category is always present, zeroed where the diff touched nothing of that kind, so nothing has to tell `0` apart from a missing key.
+That's the whole format: five categories plus a `total`, each with `added`, `modified` and `removed`, each of those with `code`, `comment` and `blank`. Every category is always present, zeroed where the diff touched nothing of that kind, so nothing has to tell `0` apart from a missing key.
 
 Enough to gate on, with no `jq` step:
 

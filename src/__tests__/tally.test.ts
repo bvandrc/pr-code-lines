@@ -46,7 +46,8 @@ const codePerCategory = (tally: DiffTally) =>
 const GLOBS: CategoryGlobs = {
   tests: ['**/__tests__/**', '**/*.test.*', '**/*.spec.*'],
   generated: ['**/package-lock.json', '**/migrations/**'],
-  docs: ['**/*.md', '**/*.json'],
+  docs: ['**/*.md'],
+  config: ['**/*.json', '**/*.yml'],
 }
 
 describe('tallyDiff', () => {
@@ -83,6 +84,7 @@ describe('tallyDiff', () => {
       TESTS: 50,
       GENERATED: 912,
       DOCS: 4,
+      CONFIG: 0,
     })
   })
 
@@ -99,6 +101,7 @@ describe('tallyDiff', () => {
       TESTS: 9,
       GENERATED: 0,
       DOCS: 0,
+      CONFIG: 0,
     })
   })
 
@@ -107,11 +110,11 @@ describe('tallyDiff', () => {
       clocReport({ added: { '.github/workflows/ci.yml': { code: 20 } } }),
       {
         ...GLOBS,
-        docs: ['**/.github/**'],
+        config: ['**/.github/**'],
       }
     )
 
-    expect(tally.byCategory.DOCS.added.code).toBe(20)
+    expect(tally.byCategory.CONFIG.added.code).toBe(20)
     expect(tally.byCategory.SOURCE.added.code).toBe(0)
   })
 
@@ -142,6 +145,7 @@ describe('tallyDiff', () => {
       TESTS: 0,
       GENERATED: 0,
       DOCS: 0,
+      CONFIG: 0,
     })
   })
 
@@ -179,6 +183,7 @@ describe("action.yml's default patterns", () => {
     tests: defaults('test-patterns'),
     generated: defaults('generated-patterns'),
     docs: defaults('docs-patterns'),
+    config: defaults('config-patterns'),
   }
 
   const categoryOf = (file: string) => {
@@ -208,8 +213,11 @@ describe("action.yml's default patterns", () => {
     ['public/app.min.js', 'GENERATED'],
     ['README.md', 'DOCS'],
     ['docs/architecture.adoc', 'DOCS'],
-    ['tsconfig.json', 'DOCS'],
-    ['.github/workflows/ci.yml', 'DOCS'],
+    ['LICENSE', 'DOCS'],
+    ['tsconfig.json', 'CONFIG'],
+    ['.github/workflows/ci.yml', 'CONFIG'],
+    ['Dockerfile', 'CONFIG'],
+    ['infra/prod.tfvars', 'CONFIG'],
   ])('classifies %s as %s', (file, expected) => {
     expect(categoryOf(file)).toBe(expected)
   })

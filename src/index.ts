@@ -24,6 +24,7 @@ async function run(): Promise<void> {
     tests: readGlobs('test-patterns'),
     generated: readGlobs('generated-patterns'),
     docs: readGlobs('docs-patterns'),
+    config: readGlobs('config-patterns'),
   }
 
   const pullRequest = context.payload.pull_request

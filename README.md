@@ -25,7 +25,7 @@ jobs:
       - id: lines
         uses: bvandrc/pr-code-lines@v1
 
-      - run: echo '${{ fromJSON(steps.lines.outputs.json).byCategory.SOURCE.added.code }} lines of source code'
+      - run: echo '${{ fromJSON(steps.lines.outputs.json).byCategory.source.added.code }} lines of source code'
 ```
 
 `fetch-depth: 0` is required. The action counts from the **merge base** of the two revisions, not from the base branch's tip, so a PR isn't billed for commits that landed on the base after it forked — and a shallow clone doesn't have that commit.
@@ -60,11 +60,11 @@ One output, `json`, holding every count:
 ```json
 {
   "byCategory": {
-    "SOURCE":    { "added": { "code": 91, "comment": 106, "blank": 10 }, "modified": { … }, "removed": { … } },
-    "TESTS":     { "added": { "code": 12, "comment": 4,   "blank": 2  }, "modified": { … }, "removed": { … } },
-    "GENERATED": { … },
-    "DOCS":      { … },
-    "CONFIG":    { … }
+    "source":    { "added": { "code": 91, "comment": 106, "blank": 10 }, "modified": { … }, "removed": { … } },
+    "tests":     { "added": { "code": 12, "comment": 4,   "blank": 2  }, "modified": { … }, "removed": { … } },
+    "generated": { … },
+    "docs":      { … },
+    "config":    { … }
   },
   "total": { "added": { … }, "modified": { … }, "removed": { … } }
 }
@@ -78,7 +78,7 @@ Enough to gate on, with no `jq` step:
       - id: lines
         uses: bvandrc/pr-code-lines@v1
 
-      - if: fromJSON(steps.lines.outputs.json).byCategory.SOURCE.added.code > 400
+      - if: fromJSON(steps.lines.outputs.json).byCategory.source.added.code > 400
         run: echo "::warning::Large PR — consider splitting it."
 ```
 

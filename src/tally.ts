@@ -6,6 +6,7 @@
  * config.
  */
 
+import { zipObject } from 'es-toolkit'
 import picomatch from 'picomatch'
 
 import {
@@ -16,11 +17,11 @@ import {
 } from './cloc/run.ts'
 
 export const FILE_CATEGORIES = [
-  'SOURCE',
-  'TESTS',
-  'GENERATED',
-  'DOCS',
-  'CONFIG',
+  'source',
+  'tests',
+  'generated',
+  'docs',
+  'config',
 ] as const
 export type FileCategory = (typeof FILE_CATEGORIES)[number]
 
@@ -62,10 +63,10 @@ const addInto = (target: ClocCounts, source: ClocCounts) => {
  */
 const buildMatchers = (globs: CategoryGlobs) =>
   [
-    ['TESTS', globs.tests],
-    ['GENERATED', globs.generated],
-    ['DOCS', globs.docs],
-    ['CONFIG', globs.config],
+    ['tests', globs.tests],
+    ['generated', globs.generated],
+    ['docs', globs.docs],
+    ['config', globs.config],
   ].map(
     ([category, patterns]) =>
       [category, picomatch(patterns as string[], { dot: true })] as const
@@ -81,9 +82,10 @@ export function tallyDiff(
   globs: CategoryGlobs
 ): DiffTally {
   const matchers = buildMatchers(globs)
-  const byCategory = Object.fromEntries(
-    FILE_CATEGORIES.map((category) => [category, emptyTally()])
-  ) as Record<FileCategory, CategoryTally>
+  const byCategory = zipObject(
+    [...FILE_CATEGORIES],
+    FILE_CATEGORIES.map(() => emptyTally())
+  )
   const total = emptyTally()
 
   for (const kind of CHANGE_KINDS) {
@@ -91,7 +93,7 @@ export function tallyDiff(
       if (NON_FILE_KEYS.has(path)) continue
 
       const category =
-        matchers.find(([, matches]) => matches(path))?.[0] ?? 'SOURCE'
+        matchers.find(([, matches]) => matches(path))?.[0] ?? 'source'
       addInto(byCategory[category][kind], counts)
       addInto(total[kind], counts)
     }

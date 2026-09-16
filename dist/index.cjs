@@ -49708,14 +49708,21 @@ async function resolveShaRange({
   return { baseSha: mergeBase.trim(), headSha: head };
 }
 
+// node_modules/es-toolkit/dist/array/zipObject.mjs
+function zipObject(keys, values) {
+  const result = {};
+  for (let i = 0; i < keys.length; i++) result[keys[i]] = values[i];
+  return result;
+}
+
 // src/tally.ts
 var import_picomatch = __toESM(require_picomatch2(), 1);
 var FILE_CATEGORIES = [
-  "SOURCE",
-  "TESTS",
-  "GENERATED",
-  "DOCS",
-  "CONFIG"
+  "source",
+  "tests",
+  "generated",
+  "docs",
+  "config"
 ];
 var NON_FILE_KEYS = /* @__PURE__ */ new Set(["SUM", "header"]);
 var emptyTally = () => ({
@@ -49729,23 +49736,24 @@ var addInto = (target, source) => {
   target.blank += source.blank;
 };
 var buildMatchers = (globs) => [
-  ["TESTS", globs.tests],
-  ["GENERATED", globs.generated],
-  ["DOCS", globs.docs],
-  ["CONFIG", globs.config]
+  ["tests", globs.tests],
+  ["generated", globs.generated],
+  ["docs", globs.docs],
+  ["config", globs.config]
 ].map(
   ([category, patterns]) => [category, (0, import_picomatch.default)(patterns, { dot: true })]
 );
 function tallyDiff(report, globs) {
   const matchers = buildMatchers(globs);
-  const byCategory = Object.fromEntries(
-    FILE_CATEGORIES.map((category) => [category, emptyTally()])
+  const byCategory = zipObject(
+    [...FILE_CATEGORIES],
+    FILE_CATEGORIES.map(() => emptyTally())
   );
   const total = emptyTally();
   for (const kind of CHANGE_KINDS) {
     for (const [path5, counts] of Object.entries(report[kind] ?? {})) {
       if (NON_FILE_KEYS.has(path5)) continue;
-      const category = matchers.find(([, matches]) => matches(path5))?.[0] ?? "SOURCE";
+      const category = matchers.find(([, matches]) => matches(path5))?.[0] ?? "source";
       addInto(byCategory[category][kind], counts);
       addInto(total[kind], counts);
     }

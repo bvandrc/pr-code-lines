@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { sumBy } from 'es-toolkit'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { type ClocDiffReport, runClocDiff } from '../run.ts'
@@ -116,14 +117,8 @@ const c = 3
     const head = commit('move it')
 
     const report = await countBetween(base, head)
-    const added = Object.values(report.added ?? {}).reduce(
-      (sum, c) => sum + c.code,
-      0
-    )
-    const removed = Object.values(report.removed ?? {}).reduce(
-      (sum, c) => sum + c.code,
-      0
-    )
+    const added = sumBy(Object.values(report.added ?? {}), (c) => c.code)
+    const removed = sumBy(Object.values(report.removed ?? {}), (c) => c.code)
 
     expect(added).toBe(0)
     expect(removed).toBe(0)

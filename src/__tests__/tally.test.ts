@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { mapValues } from 'es-toolkit'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
 
@@ -25,23 +26,11 @@ const clocReport = (sections: {
   modified?: Record<string, Counts>
   removed?: Record<string, Counts>
 }): ClocDiffReport =>
-  Object.fromEntries(
-    Object.entries(sections).map(([kind, files]) => [
-      kind,
-      Object.fromEntries(
-        Object.entries(files).map(([file, c]) => [file, counts(c)])
-      ),
-    ])
-  )
+  mapValues(sections, (files) => mapValues(files ?? {}, counts))
 
 /** Each category's added code, which is what most of these cases turn on. */
 const codePerCategory = (tally: DiffTally) =>
-  Object.fromEntries(
-    Object.entries(tally.byCategory).map(([category, t]) => [
-      category,
-      t.added.code,
-    ])
-  )
+  mapValues(tally.byCategory, (t) => t.added.code)
 
 const GLOBS: CategoryGlobs = {
   tests: ['**/__tests__/**', '**/*.test.*', '**/*.spec.*'],
@@ -80,11 +69,11 @@ describe('tallyDiff', () => {
 
     // `Makefile` matches no glob, so it lands in source alongside thing.ts.
     expect(codePerCategory(tally)).toEqual({
-      SOURCE: 8,
-      TESTS: 50,
-      GENERATED: 912,
-      DOCS: 4,
-      CONFIG: 0,
+      source: 8,
+      tests: 50,
+      generated: 912,
+      docs: 4,
+      config: 0,
     })
   })
 
@@ -97,11 +86,11 @@ describe('tallyDiff', () => {
     )
 
     expect(codePerCategory(tally)).toEqual({
-      SOURCE: 0,
-      TESTS: 9,
-      GENERATED: 0,
-      DOCS: 0,
-      CONFIG: 0,
+      source: 0,
+      tests: 9,
+      generated: 0,
+      docs: 0,
+      config: 0,
     })
   })
 
@@ -114,8 +103,8 @@ describe('tallyDiff', () => {
       }
     )
 
-    expect(tally.byCategory.CONFIG.added.code).toBe(20)
-    expect(tally.byCategory.SOURCE.added.code).toBe(0)
+    expect(tally.byCategory.config.added.code).toBe(20)
+    expect(tally.byCategory.source.added.code).toBe(0)
   })
 
   it("ignores cloc's SUM and header siblings of the per-file entries", () => {
@@ -141,11 +130,11 @@ describe('tallyDiff', () => {
 
     // A caller reading one category never has to tell 0 from a missing key.
     expect(codePerCategory(tally)).toEqual({
-      SOURCE: 2,
-      TESTS: 0,
-      GENERATED: 0,
-      DOCS: 0,
-      CONFIG: 0,
+      source: 2,
+      tests: 0,
+      generated: 0,
+      docs: 0,
+      config: 0,
     })
   })
 
@@ -197,27 +186,27 @@ describe("action.yml's default patterns", () => {
   }
 
   it.each([
-    ['client/src/lib/storage.ts', 'SOURCE'],
-    ['server/index.ts', 'SOURCE'],
-    ['Makefile', 'SOURCE'],
-    ['src/main/kotlin/App.kt', 'SOURCE'],
-    ['client/src/lib/__tests__/storage.test.ts', 'TESTS'],
-    ['playwright/e2e/tasks.spec.ts', 'TESTS'],
-    ['pkg/thing_test.go', 'TESTS'],
-    ['src/test/java/AppTest.java', 'TESTS'],
-    ['tests/conftest.py', 'TESTS'],
-    ['package-lock.json', 'GENERATED'],
-    ['go.sum', 'GENERATED'],
-    ['migrations/0007_add_task_schedule.sql', 'GENERATED'],
-    ['api/service.pb.go', 'GENERATED'],
-    ['public/app.min.js', 'GENERATED'],
-    ['README.md', 'DOCS'],
-    ['docs/architecture.adoc', 'DOCS'],
-    ['LICENSE', 'DOCS'],
-    ['tsconfig.json', 'CONFIG'],
-    ['.github/workflows/ci.yml', 'CONFIG'],
-    ['Dockerfile', 'CONFIG'],
-    ['infra/prod.tfvars', 'CONFIG'],
+    ['client/src/lib/storage.ts', 'source'],
+    ['server/index.ts', 'source'],
+    ['Makefile', 'source'],
+    ['src/main/kotlin/App.kt', 'source'],
+    ['client/src/lib/__tests__/storage.test.ts', 'tests'],
+    ['playwright/e2e/tasks.spec.ts', 'tests'],
+    ['pkg/thing_test.go', 'tests'],
+    ['src/test/java/AppTest.java', 'tests'],
+    ['tests/conftest.py', 'tests'],
+    ['package-lock.json', 'generated'],
+    ['go.sum', 'generated'],
+    ['migrations/0007_add_task_schedule.sql', 'generated'],
+    ['api/service.pb.go', 'generated'],
+    ['public/app.min.js', 'generated'],
+    ['README.md', 'docs'],
+    ['docs/architecture.adoc', 'docs'],
+    ['LICENSE', 'docs'],
+    ['tsconfig.json', 'config'],
+    ['.github/workflows/ci.yml', 'config'],
+    ['Dockerfile', 'config'],
+    ['infra/prod.tfvars', 'config'],
   ])('classifies %s as %s', (file, expected) => {
     expect(categoryOf(file)).toBe(expected)
   })

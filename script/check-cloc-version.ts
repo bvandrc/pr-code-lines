@@ -24,6 +24,9 @@ const versionSchema = z.object({
 
 type ClocVersion = z.infer<typeof versionSchema>
 
+/** Only `tag_name` is read; zod strips the rest of the release payload. */
+const releaseSchema = z.object({ tag_name: z.string().min(1) })
+
 const scriptUrl = (version: string) =>
   `https://github.com/AlDanial/cloc/releases/download/v${version}/cloc-${version}.pl`
 
@@ -42,8 +45,7 @@ async function latestVersion(): Promise<string> {
     throw new Error(`Could not read cloc's latest release: ${response.status}`)
   }
 
-  const { tag_name } = (await response.json()) as { tag_name?: string }
-  if (!tag_name) throw new Error("cloc's latest release has no tag name")
+  const { tag_name } = releaseSchema.parse(await response.json())
 
   return tag_name.replace(/^v/, '')
 }
@@ -98,11 +100,15 @@ async function run(): Promise<void> {
 }
 
 run().catch((error: unknown) => {
-  if (error instanceof z.ZodError) {
-    console.error(`${VERSION_FILE.pathname} is not a valid cloc version:`)
-    console.error(z.prettifyError(error))
-  } else {
-    console.error(error instanceof Error ? error.message : error)
-  }
+  // A ZodError's own `.message` is the raw issue array, which is not what
+  // anyone wants in a scheduled job's log. Two payloads get parsed here, so the
+  // header names neither -- zod's paths (`at sha256`, `at tag_name`) say which.
+  console.error(
+    error instanceof z.ZodError
+      ? z.prettifyError(error)
+      : error instanceof Error
+        ? error.message
+        : error
+  )
   process.exitCode = 1
 })

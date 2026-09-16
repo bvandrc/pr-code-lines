@@ -2,7 +2,7 @@
  * @fileoverview Sums `cloc --diff --by-file --json` output into one tally per
  * category. GitHub's own +/- counts every line a diff touches, so 300 lines of
  * doc comments reads the same as 300 lines of logic; this splits code from
- * comments and blank lines, and source from tests, generated files, docs and
+ * comments and blank lines, and source from tests, generated files, docs, and
  * config.
  */
 

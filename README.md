@@ -2,7 +2,7 @@
 
 GitHub tells you a pull request is `+329 −144`. That number counts every line the diff touches, so 300 lines of doc comments reads exactly like 300 lines of logic, and a regenerated lockfile reads like a rewrite.
 
-This action recounts the same range with [cloc](https://github.com/AlDanial/cloc), which parses comments per language rather than guessing at them, and sorts the changed files into source, tests, generated, docs and config.
+This action recounts the same range with [cloc](https://github.com/AlDanial/cloc), which parses comments per language rather than guessing at them, and sorts the changed files into source, tests, generated, docs, and config.
 
 > **Status**: this release counts and categorises, and exposes the tallies as outputs. Rendering the table and posting it as a PR comment land next.
 
@@ -70,7 +70,7 @@ One output, `json`, holding every count:
 }
 ```
 
-That's the whole format: five categories plus a `total`, each with `added`, `modified` and `removed`, each of those with `code`, `comment` and `blank`. Every category is always present, zeroed where the diff touched nothing of that kind, so nothing has to tell `0` apart from a missing key.
+That's the whole format: five categories plus a `total`, each with `added`, `modified`, and `removed`, each of those with `code`, `comment`, and `blank`. Every category is always present, zeroed where the diff touched nothing of that kind, so nothing has to tell `0` apart from a missing key.
 
 Enough to gate on, with no `jq` step:
 

@@ -1,5 +1,5 @@
 name: PR Code Lines
-description: Count the code lines a pull request changes, with comments, blank lines, tests and generated files separated.
+description: Count the code lines a pull request changes, with comments, blank lines, tests, generated files, docs, and config tallied separately.
 author: bvandrc
 
 branding:

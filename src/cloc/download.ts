@@ -9,23 +9,21 @@ import { join } from 'node:path'
 import { debug } from '@actions/core'
 import { cacheFile, downloadTool, find } from '@actions/tool-cache'
 
+import pin from './pin.json' with { type: 'json' }
+
 /**
- * Upstream's release script, pinned by URL and checksum, rather than the `cloc`
- * npm package. That package's own version numbers are unrelated to the tool's:
- * installing `cloc@2.06` from the registry gets you cloc *1.86*, which reads a
- * rename as a whole file added plus a whole file deleted, overstating a rename
- * by the file's entire length. (That 2.06 is the registry's number and has
- * nothing to do with CLOC_VERSION below, which is the tool's own release.)
+ * The pinned release lives in `pin.json` rather than here so that
+ * `script/check-cloc-version.ts` can move it by rewriting data instead of
+ * patching this file's source.
  *
- * To move the pin: bump CLOC_VERSION, then set CLOC_SHA256 to the output of
- * `curl -fsSL <CLOC_URL> | sha256sum`, and run the tests -- they exercise the
- * real script, so a release that changed how it counts fails them here rather
- * than in someone's pull request.
+ * It is upstream's release script, pinned by URL and checksum, rather than the
+ * `cloc` npm package. That package's own version numbers are unrelated to the
+ * tool's: installing `cloc@2.06` from the registry gets you cloc *1.86*, which
+ * reads a rename as a whole file added plus a whole file deleted, overstating a
+ * rename by the file's entire length. (That 2.06 is the registry's number and
+ * has nothing to do with the pinned version.)
  */
-const CLOC_VERSION = '2.10'
-const CLOC_URL = `https://github.com/AlDanial/cloc/releases/download/v${CLOC_VERSION}/cloc-${CLOC_VERSION}.pl`
-const CLOC_SHA256 =
-  'bf59272455172108072a0a106379f7509fd4349bdcfd85203bac038ccd286d83'
+const CLOC_URL = `https://github.com/AlDanial/cloc/releases/download/v${pin.version}/cloc-${pin.version}.pl`
 
 /**
  * Resolves to the path of the pinned cloc script, downloading it on first use
@@ -33,7 +31,7 @@ const CLOC_SHA256 =
  * a script whose checksum doesn't match.
  */
 export async function downloadCloc(): Promise<string> {
-  const cached = find('cloc', CLOC_VERSION)
+  const cached = find('cloc', pin.version)
   if (cached) return join(cached, 'cloc.pl')
 
   debug(`Downloading ${CLOC_URL}`)
@@ -42,12 +40,12 @@ export async function downloadCloc(): Promise<string> {
   const actual = createHash('sha256')
     .update(await readFile(downloaded))
     .digest('hex')
-  if (actual !== CLOC_SHA256) {
+  if (actual !== pin.sha256) {
     throw new Error(
-      `cloc checksum mismatch: expected ${CLOC_SHA256}, got ${actual}. Refusing to run it.`
+      `cloc checksum mismatch: expected ${pin.sha256}, got ${actual}. Refusing to run it.`
     )
   }
 
-  const dir = await cacheFile(downloaded, 'cloc.pl', 'cloc', CLOC_VERSION)
+  const dir = await cacheFile(downloaded, 'cloc.pl', 'cloc', pin.version)
   return join(dir, 'cloc.pl')
 }

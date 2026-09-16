@@ -47809,22 +47809,26 @@ function _getGlobal(key, defaultValue) {
   return value !== void 0 ? value : defaultValue;
 }
 
+// src/cloc/pin.json
+var pin_default = {
+  version: "2.10",
+  sha256: "bf59272455172108072a0a106379f7509fd4349bdcfd85203bac038ccd286d83"
+};
+
 // src/cloc/download.ts
-var CLOC_VERSION = "2.10";
-var CLOC_URL = `https://github.com/AlDanial/cloc/releases/download/v${CLOC_VERSION}/cloc-${CLOC_VERSION}.pl`;
-var CLOC_SHA256 = "bf59272455172108072a0a106379f7509fd4349bdcfd85203bac038ccd286d83";
+var CLOC_URL = `https://github.com/AlDanial/cloc/releases/download/v${pin_default.version}/cloc-${pin_default.version}.pl`;
 async function downloadCloc() {
-  const cached2 = find("cloc", CLOC_VERSION);
+  const cached2 = find("cloc", pin_default.version);
   if (cached2) return (0, import_node_path.join)(cached2, "cloc.pl");
   debug(`Downloading ${CLOC_URL}`);
   const downloaded = await downloadTool(CLOC_URL);
   const actual = (0, import_node_crypto.createHash)("sha256").update(await (0, import_promises.readFile)(downloaded)).digest("hex");
-  if (actual !== CLOC_SHA256) {
+  if (actual !== pin_default.sha256) {
     throw new Error(
-      `cloc checksum mismatch: expected ${CLOC_SHA256}, got ${actual}. Refusing to run it.`
+      `cloc checksum mismatch: expected ${pin_default.sha256}, got ${actual}. Refusing to run it.`
     );
   }
-  const dir = await cacheFile(downloaded, "cloc.pl", "cloc", CLOC_VERSION);
+  const dir = await cacheFile(downloaded, "cloc.pl", "cloc", pin_default.version);
   return (0, import_node_path.join)(dir, "cloc.pl");
 }
 

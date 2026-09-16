@@ -24007,9 +24007,9 @@ function _getGlobal(key, defaultValue) {
 }
 
 // src/cloc.ts
-var CLOC_VERSION = "2.06";
+var CLOC_VERSION = "2.10";
 var CLOC_URL = `https://github.com/AlDanial/cloc/releases/download/v${CLOC_VERSION}/cloc-${CLOC_VERSION}.pl`;
-var CLOC_SHA256 = "ed9fbdd081a2ceb933ea490b3c1cfacc87d3898ae2650d0d6756439695a836c8";
+var CLOC_SHA256 = "bf59272455172108072a0a106379f7509fd4349bdcfd85203bac038ccd286d83";
 async function downloadCloc() {
   const cached = find("cloc", CLOC_VERSION);
   if (cached) return (0, import_node_path.join)(cached, "cloc.pl");

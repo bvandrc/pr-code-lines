@@ -35,11 +35,16 @@ export type ClocDiffReport = Partial<
  * npm package: that package's version numbers are decoupled from the tool's, so
  * `cloc@2.06` installs cloc 1.86 -- which reads a rename as a whole file added
  * plus a whole file deleted, overstating a rename by the file's entire length.
+ *
+ * To move the pin: bump CLOC_VERSION, then set CLOC_SHA256 to the output of
+ * `curl -fsSL <CLOC_URL> | sha256sum`, and run the tests -- they exercise the
+ * real script, so a release that changed how it counts fails them here rather
+ * than in someone's pull request.
  */
-const CLOC_VERSION = '2.06'
+const CLOC_VERSION = '2.10'
 const CLOC_URL = `https://github.com/AlDanial/cloc/releases/download/v${CLOC_VERSION}/cloc-${CLOC_VERSION}.pl`
 const CLOC_SHA256 =
-  'ed9fbdd081a2ceb933ea490b3c1cfacc87d3898ae2650d0d6756439695a836c8'
+  'bf59272455172108072a0a106379f7509fd4349bdcfd85203bac038ccd286d83'
 
 async function downloadCloc(): Promise<string> {
   const cached = find('cloc', CLOC_VERSION)

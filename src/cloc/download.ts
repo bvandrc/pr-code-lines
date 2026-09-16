@@ -11,9 +11,11 @@ import { cacheFile, downloadTool, find } from '@actions/tool-cache'
 
 /**
  * Upstream's release script, pinned by URL and checksum, rather than the `cloc`
- * npm package: that package's version numbers are decoupled from the tool's, so
- * `cloc@2.06` installs cloc 1.86 -- which reads a rename as a whole file added
- * plus a whole file deleted, overstating a rename by the file's entire length.
+ * npm package. That package's own version numbers are unrelated to the tool's:
+ * installing `cloc@2.06` from the registry gets you cloc *1.86*, which reads a
+ * rename as a whole file added plus a whole file deleted, overstating a rename
+ * by the file's entire length. (That 2.06 is the registry's number and has
+ * nothing to do with CLOC_VERSION below, which is the tool's own release.)
  *
  * To move the pin: bump CLOC_VERSION, then set CLOC_SHA256 to the output of
  * `curl -fsSL <CLOC_URL> | sha256sum`, and run the tests -- they exercise the

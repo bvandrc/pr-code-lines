@@ -29,8 +29,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      # The cloc tests fetch the pinned script and build throwaway git
-      # repositories, so this job needs network and git, not just node.
       - run: npm run test:unit
 
   bundle:

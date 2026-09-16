@@ -28197,8 +28197,10 @@ async function runClocDiff(options) {
 }
 
 // src/sha.ts
-async function resolveShaRange(candidates) {
-  const { base, head } = candidates;
+async function resolveShaRange({
+  base,
+  head
+}) {
   if (!base || !head) {
     throw new Error(
       "No revisions to compare: run this on a `pull_request` event, or pass `base-sha` and `head-sha`."

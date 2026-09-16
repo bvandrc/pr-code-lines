@@ -1,0 +1,62 @@
+name: cloc Version
+
+on:
+  schedule:
+    - cron: '0 10 * * 1' # Mondays, 10:00 UTC
+  workflow_dispatch: # Allows manual triggering
+
+permissions:
+  contents: write # pushes the branch the pull request is opened from
+  pull-requests: write
+
+jobs:
+  check:
+    name: Check the cloc pin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+
+      # Rewrites src/cloc/download.ts in place when upstream has moved on,
+      # version and checksum together -- a pin carrying one without the other
+      # fails the checksum at runtime.
+      - name: Compare the pin against upstream
+        id: pin
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: npm run cloc:check
+
+      # The pin is compiled into the bundle, so skipping this would open a pull
+      # request that fails its own Bundle Current job.
+      - name: Rebuild the bundle
+        if: steps.pin.outputs.outdated == 'true'
+        run: npm run build
+
+      - name: Open a pull request
+        if: steps.pin.outputs.outdated == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.pin.outputs.version }}
+          PREVIOUS: ${{ steps.pin.outputs.previous }}
+        run: |
+          branch="chore/cloc-$VERSION"
+
+          # A second Monday on the same release would otherwise fail the push.
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            echo "$branch already exists -- nothing to open."
+            exit 0
+          fi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git switch -c "$branch"
+          git commit -am "fix: move the cloc pin to v$VERSION"
+          git push -u origin "$branch"
+
+          gh pr create \
+            --title "fix: move the cloc pin to v$VERSION" \
+            --body "cloc released v$VERSION; the pin was on v$PREVIOUS.
+
+          \`CLOC_VERSION\` and \`CLOC_SHA256\` were rewritten together, the checksum taken from the release asset itself, and \`dist/\` rebuilt so the bundle carries the same pin.
+
+          Nothing here is trusted on faith: the Unit Tests job runs the real script against throwaway git repositories, so a release that changed how cloc counts turns this pull request red rather than quietly changing everyone's numbers. Read those results before merging."

@@ -1,5 +1,5 @@
 {
-  "include": ["./src/**/*"],
+  "include": ["./src/**/*", "./script/**/*"],
   "exclude": ["node_modules", "dist"],
   "compilerOptions": {
     "noEmit": true,

@@ -20,12 +20,13 @@ export type ShaRange = {
  * in the checkout -- which a shallow clone causes, since it holds the two tips
  * but not their common ancestor.
  */
-export async function resolveShaRange(candidates: {
+export async function resolveShaRange({
+  base,
+  head,
+}: {
   base: string | undefined
   head: string | undefined
 }): Promise<ShaRange> {
-  const { base, head } = candidates
-
   if (!base || !head) {
     throw new Error(
       'No revisions to compare: run this on a `pull_request` event, or pass `base-sha` and `head-sha`.'

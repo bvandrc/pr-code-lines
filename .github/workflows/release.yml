@@ -12,7 +12,7 @@ jobs:
     name: Move the major tag
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       # Consumers pin `@v1`, so that tag has to follow each v1.x.y release.
       - name: Retag

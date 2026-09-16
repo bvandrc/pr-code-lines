@@ -17,24 +17,18 @@ jobs:
     name: Lint & Types
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: '24'
-          cache: 'npm'
-      - run: npm ci
+      # checkout stays in each job: a local composite action is read from the
+      # workspace, so it cannot run until the repo is on disk.
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
       - run: npm run check
 
   unit:
     name: Unit Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: '24'
-          cache: 'npm'
-      - run: npm ci
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
       # The cloc tests fetch the pinned script and build throwaway git
       # repositories, so this job needs network and git, not just node.
       - run: npm run test:unit
@@ -43,12 +37,8 @@ jobs:
     name: Bundle Current
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: '24'
-          cache: 'npm'
-      - run: npm ci
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
 
       # A JS action runs the committed bundle, so a dist/ that lags behind src/
       # ships the old behaviour while the diff shows the new one. Rebuild and

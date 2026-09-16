@@ -31,7 +31,7 @@ const scriptUrl = (version: string) =>
   `https://github.com/AlDanial/cloc/releases/download/v${version}/cloc-${version}.pl`
 
 /** Upstream tags releases `v2.10`; `version.json` and the asset name both drop the `v`. */
-async function latestVersion(): Promise<string> {
+async function fetchLatestVersion(): Promise<string> {
   const response = await fetch(LATEST_RELEASE, {
     headers: {
       accept: 'application/vnd.github+json',
@@ -79,7 +79,7 @@ async function run(): Promise<void> {
     JSON.parse(await readFile(VERSION_FILE, 'utf8'))
   )
 
-  const latest = await latestVersion()
+  const latest = await fetchLatestVersion()
   if (latest === current.version) {
     console.log(`cloc is pinned to the latest release (v${current.version}).`)
     await report({ outdated: 'false', version: current.version })

@@ -56,16 +56,16 @@ describe('runClocDiff', () => {
     })
 
   it('separates code from comments and blank lines', async () => {
-    const file = 'a.ts'
-    const before = 'const a = 1\n'
+    const FILE = 'a.ts'
+    const BEFORE = 'const a = 1\n'
 
-    write(file, before)
+    write(FILE, BEFORE)
     const base = commit('base')
 
-    // Everything after `before` is what the assertion below counts.
+    // Everything after `BEFORE` is what the assertion below counts.
     write(
-      file,
-      `${before}
+      FILE,
+      `${BEFORE}
 // two
 // comment lines
 const b = 2
@@ -76,7 +76,7 @@ const c = 3
 
     const report = await countBetween(base, head)
 
-    expect(report.added?.[file]).toEqual({
+    expect(report.added?.[FILE]).toEqual({
       nFiles: 0,
       code: 2,
       comment: 2,
@@ -85,18 +85,18 @@ const c = 3
   }, 60_000)
 
   it('does not read a `//` inside a string as a comment', async () => {
-    const file = 'url.ts'
-    const before = 'const x = 1\n'
+    const FILE = 'url.ts'
+    const BEFORE = 'const x = 1\n'
 
-    write(file, before)
+    write(FILE, BEFORE)
     const base = commit('before url')
 
-    write(file, `${before}const u = 'https://example.com'\n`)
+    write(FILE, `${BEFORE}const u = 'https://example.com'\n`)
     const head = commit('add a url')
 
     const report = await countBetween(base, head)
 
-    expect(report.added?.[file]).toMatchObject({ code: 1, comment: 0 })
+    expect(report.added?.[FILE]).toMatchObject({ code: 1, comment: 0 })
   }, 60_000)
 
   /**
@@ -105,11 +105,11 @@ const c = 3
    * file deleted, overstating a moved file by its entire length.
    */
   it('counts a pure rename as a rename, not a whole file added and deleted', async () => {
-    const body = [
+    const BODY = [
       ...Array.from({ length: 40 }, (_, i) => `const v${i} = ${i}`),
       '',
     ].join('\n')
-    write('big.ts', body)
+    write('big.ts', BODY)
     const base = commit('add a file worth moving')
 
     git('mv', 'big.ts', 'moved.ts')

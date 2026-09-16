@@ -19,14 +19,17 @@
     "@actions/exec": "^3",
     "@actions/github": "^9",
     "@actions/tool-cache": "^4",
-    "zod": "^4.6.5"
+    "picomatch": "^4",
+    "zod": "^4"
   },
   "devDependencies": {
     "@biomejs/biome": "^2",
     "@types/node": "^22",
+    "@types/picomatch": "^4",
     "esbuild": "^0.28",
     "tsx": "^4",
     "typescript": "^7",
-    "vitest": "^5"
+    "vitest": "^5",
+    "yaml": "^2"
   }
 }

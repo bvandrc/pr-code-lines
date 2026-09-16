@@ -1,5 +1,5 @@
 name: PR Code Lines
-description: Count the code lines a pull request changes, with comments and blank lines separated.
+description: Count the code lines a pull request changes, with comments, blank lines, tests and generated files separated.
 author: bvandrc
 
 branding:
@@ -14,9 +14,85 @@ inputs:
     description: Revision to count to. Defaults to the pull request's head.
     default: ''
 
+  # Matched in order -- tests, then generated, then docs -- and the first match
+  # wins, so a spec file under a generated directory still counts as a test.
+  # Anything matching none of them counts as source.
+  test-patterns:
+    description: Globs counted as tests, one per line.
+    default: |
+      **/__tests__/**
+      **/__mocks__/**
+      **/test/**
+      **/tests/**
+      **/spec/**
+      **/*.test.*
+      **/*.spec.*
+      **/*_test.*
+      **/*_spec.*
+      **/*Test.*
+      **/*Tests.*
+      **/conftest.py
+  generated-patterns:
+    description: Globs counted as generated, one per line.
+    default: |
+      **/package-lock.json
+      **/yarn.lock
+      **/pnpm-lock.yaml
+      **/bun.lockb
+      **/Cargo.lock
+      **/poetry.lock
+      **/Gemfile.lock
+      **/composer.lock
+      **/go.sum
+      **/dist/**
+      **/build/**
+      **/vendor/**
+      **/migrations/**
+      **/__snapshots__/**
+      **/*.min.js
+      **/*.min.css
+      **/*.generated.*
+      **/*.pb.go
+      **/*_pb2.py
+      **/*.g.dart
+      **/*.freezed.dart
+  docs-patterns:
+    description: Globs counted as docs and config, one per line.
+    default: |
+      **/*.md
+      **/*.mdx
+      **/*.rst
+      **/*.adoc
+      **/*.txt
+      **/docs/**
+      **/*.json
+      **/*.yml
+      **/*.yaml
+      **/*.toml
+      **/*.ini
+      **/*.cfg
+      **/.github/**
+      **/LICENSE*
+
 outputs:
+  source-code-added:
+    description: Code lines added in source files.
+  source-code-modified:
+    description: Code lines changed in place in source files.
+  source-code-removed:
+    description: Code lines removed from source files.
+  code-added:
+    description: Code lines added across every category.
+  code-modified:
+    description: Code lines changed in place across every category.
+  code-removed:
+    description: Code lines removed across every category.
+  comment-added:
+    description: Comment lines added across every category.
+  comment-removed:
+    description: Comment lines removed across every category.
   json:
-    description: cloc's per-file diff, as `{added,modified,removed,same}` keyed by repo-relative path, each holding `{code,comment,blank}`.
+    description: Every per-category tally as JSON, as `{byCategory,total}`.
 
 runs:
   using: node24

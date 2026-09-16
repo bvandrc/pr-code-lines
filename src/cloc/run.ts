@@ -89,8 +89,8 @@ export async function runClocDiff(options: {
   )
 
   // How cloc signals "nothing countable here" depends on its version: 2.10
-  // writes `{}`, 2.06 wrote no file at all. Tolerate the absent file so the pin
-  // can move either way, but keep it apart from a file that will not parse or
+  // writes `{}`, 2.06 wrote no file at all. Tolerate the absent file so the
+  // pinned version can move either way, but keep it apart from a file that will not parse or
   // whose counts are not numbers -- those are real failures, and must not be
   // reported as a count of zero.
   const raw = await readFile(reportPath, 'utf8').catch(() => null)

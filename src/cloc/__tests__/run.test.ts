@@ -96,7 +96,7 @@ describe('runClocDiff', () => {
   }, 60_000)
 
   /**
-   * The regression this pin exists for: cloc 1.86 — which the npm `cloc@2.06`
+   * The regression the pinned release exists for: cloc 1.86 — which the npm `cloc@2.06`
    * package installs — reads a rename as the whole file added plus the whole
    * file deleted, overstating a moved file by its entire length.
    */

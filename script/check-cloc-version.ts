@@ -1,7 +1,7 @@
 /**
  * @fileoverview Compares the pinned cloc release against upstream's latest and,
- * when they differ, rewrites `src/cloc/pin.json` — version and checksum
- * together, since a pin carrying one without the other fails at runtime.
+ * when they differ, rewrites `src/cloc/version.json` — version and checksum
+ * together, since one without the other fails the checksum at runtime.
  *
  * Run by `.github/workflows/cloc-version.yml`, which opens a pull request from
  * whatever this rewrites. Safe to run by hand: `npm run cloc:check`.
@@ -11,37 +11,21 @@ import { createHash } from 'node:crypto'
 import { appendFile, readFile, writeFile } from 'node:fs/promises'
 import { z } from 'zod'
 
-const PIN_FILE = new URL('../src/cloc/pin.json', import.meta.url)
+const VERSION_FILE = new URL('../src/cloc/version.json', import.meta.url)
 const LATEST_RELEASE =
   'https://api.github.com/repos/AlDanial/cloc/releases/latest'
 
-const pinSchema = z.object({
+const versionSchema = z.object({
   version: z.string().min(1),
   sha256: z
     .string()
     .regex(/^[a-f0-9]{64}$/, 'must be a 64-character hex digest'),
 })
 
-type Pin = z.infer<typeof pinSchema>
-
-/** Reads a pin, or says which field is wrong rather than failing later on a 404. */
-async function readPin(): Promise<Pin> {
-  const parsed = pinSchema.safeParse(
-    JSON.parse(await readFile(PIN_FILE, 'utf8'))
-  )
-  if (!parsed.success) {
-    throw new Error(
-      `${PIN_FILE.pathname} is not a valid pin:\n${z.prettifyError(parsed.error)}`
-    )
-  }
-
-  return parsed.data
-}
-
 const scriptUrl = (version: string) =>
   `https://github.com/AlDanial/cloc/releases/download/v${version}/cloc-${version}.pl`
 
-/** Upstream tags releases `v2.10`; the pin and the asset name both drop the `v`. */
+/** Upstream tags releases `v2.10`; `version.json` and the asset name both drop the `v`. */
 async function latestVersion(): Promise<string> {
   const response = await fetch(LATEST_RELEASE, {
     headers: {
@@ -87,29 +71,36 @@ async function report(outputs: Record<string, string>): Promise<void> {
 }
 
 async function run(): Promise<void> {
-  const pin = await readPin()
+  const current = versionSchema.parse(
+    JSON.parse(await readFile(VERSION_FILE, 'utf8'))
+  )
 
   const latest = await latestVersion()
-  if (latest === pin.version) {
-    console.log(`cloc is pinned to the latest release (v${pin.version}).`)
-    await report({ outdated: 'false', version: pin.version })
+  if (latest === current.version) {
+    console.log(`cloc is pinned to the latest release (v${current.version}).`)
+    await report({ outdated: 'false', version: current.version })
     return
   }
 
   // Download before rewriting: a release whose asset is missing or unreadable
-  // should leave the pin alone rather than half-updated.
+  // should leave version.json alone rather than half-updated.
   const sha256 = await sha256Of(scriptUrl(latest))
 
-  // Validated on the way out too: this runs unattended, and a malformed pin
+  // Validated on the way out too: this runs unattended, and a malformed file
   // committed to a branch would fail every consumer rather than just this job.
-  const next = pinSchema.parse({ version: latest, sha256 })
-  await writeFile(PIN_FILE, `${JSON.stringify(next, null, 2)}\n`)
+  const next = versionSchema.parse({ version: latest, sha256 })
+  await writeFile(VERSION_FILE, `${JSON.stringify(next, null, 2)}\n`)
 
-  console.log(`cloc v${pin.version} -> v${latest} (sha256 ${sha256})`)
-  await report({ outdated: 'true', version: latest, previous: pin.version })
+  console.log(`cloc v${current.version} -> v${latest} (sha256 ${sha256})`)
+  await report({ outdated: 'true', version: latest, previous: current.version })
 }
 
 run().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : error)
+  if (error instanceof z.ZodError) {
+    console.error(`${VERSION_FILE.pathname} is not a valid cloc version:`)
+    console.error(z.prettifyError(error))
+  } else {
+    console.error(error instanceof Error ? error.message : error)
+  }
   process.exitCode = 1
 })

@@ -9,10 +9,10 @@ import { join } from 'node:path'
 import { debug } from '@actions/core'
 import { cacheFile, downloadTool, find } from '@actions/tool-cache'
 
-import pin from './pin.json' with { type: 'json' }
+import cloc from './version.json' with { type: 'json' }
 
 /**
- * The pinned release lives in `pin.json` rather than here so that
+ * The release we pin lives in `version.json` rather than here so that
  * `script/check-cloc-version.ts` can move it by rewriting data instead of
  * patching this file's source.
  *
@@ -21,9 +21,9 @@ import pin from './pin.json' with { type: 'json' }
  * tool's: installing `cloc@2.06` from the registry gets you cloc *1.86*, which
  * reads a rename as a whole file added plus a whole file deleted, overstating a
  * rename by the file's entire length. (That 2.06 is the registry's number and
- * has nothing to do with the pinned version.)
+ * has nothing to do with the version we pin.)
  */
-const CLOC_URL = `https://github.com/AlDanial/cloc/releases/download/v${pin.version}/cloc-${pin.version}.pl`
+const CLOC_URL = `https://github.com/AlDanial/cloc/releases/download/v${cloc.version}/cloc-${cloc.version}.pl`
 
 /**
  * Resolves to the path of the pinned cloc script, downloading it on first use
@@ -31,7 +31,7 @@ const CLOC_URL = `https://github.com/AlDanial/cloc/releases/download/v${pin.vers
  * a script whose checksum doesn't match.
  */
 export async function downloadCloc(): Promise<string> {
-  const cached = find('cloc', pin.version)
+  const cached = find('cloc', cloc.version)
   if (cached) return join(cached, 'cloc.pl')
 
   debug(`Downloading ${CLOC_URL}`)
@@ -40,12 +40,12 @@ export async function downloadCloc(): Promise<string> {
   const actual = createHash('sha256')
     .update(await readFile(downloaded))
     .digest('hex')
-  if (actual !== pin.sha256) {
+  if (actual !== cloc.sha256) {
     throw new Error(
-      `cloc checksum mismatch: expected ${pin.sha256}, got ${actual}. Refusing to run it.`
+      `cloc checksum mismatch: expected ${cloc.sha256}, got ${actual}. Refusing to run it.`
     )
   }
 
-  const dir = await cacheFile(downloaded, 'cloc.pl', 'cloc', pin.version)
+  const dir = await cacheFile(downloaded, 'cloc.pl', 'cloc', cloc.version)
   return join(dir, 'cloc.pl')
 }

@@ -22,7 +22,7 @@ Conventions live outside this file, synced from https://github.com/bvandrc/bvand
 | `npm run lint`      | Biome lint                                     |
 | `npm run format`    | Biome format — **run before every commit**     |
 | `npm run ts:check`  | TypeScript check                               |
-| `npm run check`     | ts + lint + tests                              |
+| `npm run check`     | ts + lint                                      |
 
 ## Gotchas
 

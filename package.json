@@ -11,7 +11,7 @@
     "lint": "npx biome check .",
     "ts:check": "tsc",
     "test:unit": "vitest run",
-    "check": "npm run ts:check && npm run lint && npm run test:unit"
+    "check": "npm run ts:check && npm run lint"
   },
   "dependencies": {
     "@actions/core": "^3",

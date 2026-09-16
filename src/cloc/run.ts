@@ -26,6 +26,9 @@ const clocCountsSchema = z
   })
   .loose()
 
+/** One `--by-file` section: counts keyed by repo-relative path. */
+const clocSectionSchema = z.record(z.string(), clocCountsSchema)
+
 /**
  * cloc's `--diff --by-file --json` shape: one section per change kind, each
  * keyed by repo-relative path. Every changed path appears in all of them,
@@ -34,9 +37,9 @@ const clocCountsSchema = z
  */
 const clocDiffReportSchema = z
   .object({
-    added: z.record(z.string(), clocCountsSchema).optional(),
-    modified: z.record(z.string(), clocCountsSchema).optional(),
-    removed: z.record(z.string(), clocCountsSchema).optional(),
+    added: clocSectionSchema.optional(),
+    modified: clocSectionSchema.optional(),
+    removed: clocSectionSchema.optional(),
   })
   .loose()
 
@@ -61,15 +64,18 @@ async function assertPerl(): Promise<void> {
  * empty report when the range holds nothing cloc can count -- it writes no file
  * at all in that case rather than an empty one.
  */
-export async function runClocDiff(options: {
+export async function runClocDiff({
+  baseSha,
+  headSha,
+  reportPath,
+  cwd,
+}: {
   baseSha: string
   headSha: string
   reportPath: string
   /** Where to run git from. Defaults to the process's own directory. */
   cwd?: string
 }): Promise<ClocDiffReport> {
-  const { baseSha, headSha, cwd, reportPath } = options
-
   await assertPerl()
   const clocPath = await downloadCloc()
 
@@ -90,9 +96,9 @@ export async function runClocDiff(options: {
 
   // How cloc signals "nothing countable here" depends on its version: 2.10
   // writes `{}`, 2.06 wrote no file at all. Tolerate the absent file so the
-  // pinned version can move either way, but keep it apart from a file that will not parse or
-  // whose counts are not numbers -- those are real failures, and must not be
-  // reported as a count of zero.
+  // pinned version can move either way, but keep it apart from a file that
+  // will not parse or whose counts are not numbers -- those are real failures,
+  // and must not be reported as a count of zero.
   const raw = await readFile(reportPath, 'utf8').catch(() => null)
   if (raw === null) {
     info(

@@ -47838,10 +47838,11 @@ var clocCountsSchema = external_exports.object({
   comment: external_exports.number(),
   blank: external_exports.number()
 }).loose();
+var clocSectionSchema = external_exports.record(external_exports.string(), clocCountsSchema);
 var clocDiffReportSchema = external_exports.object({
-  added: external_exports.record(external_exports.string(), clocCountsSchema).optional(),
-  modified: external_exports.record(external_exports.string(), clocCountsSchema).optional(),
-  removed: external_exports.record(external_exports.string(), clocCountsSchema).optional()
+  added: clocSectionSchema.optional(),
+  modified: clocSectionSchema.optional(),
+  removed: clocSectionSchema.optional()
 }).loose();
 async function assertPerl() {
   const code = await exec("perl", ["--version"], {
@@ -47854,8 +47855,12 @@ async function assertPerl() {
     );
   }
 }
-async function runClocDiff(options) {
-  const { baseSha, headSha, cwd, reportPath } = options;
+async function runClocDiff({
+  baseSha,
+  headSha,
+  reportPath,
+  cwd
+}) {
   await assertPerl();
   const clocPath = await downloadCloc();
   await exec(

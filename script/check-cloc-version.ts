@@ -22,6 +22,8 @@ const versionSchema = z.object({
     .regex(/^[a-f0-9]{64}$/, 'must be a 64-character hex digest'),
 })
 
+type ClocVersion = z.infer<typeof versionSchema>
+
 const scriptUrl = (version: string) =>
   `https://github.com/AlDanial/cloc/releases/download/v${version}/cloc-${version}.pl`
 
@@ -86,10 +88,10 @@ async function run(): Promise<void> {
   // should leave version.json alone rather than half-updated.
   const sha256 = await sha256Of(scriptUrl(latest))
 
-  // Validated on the way out too: this runs unattended, and a malformed file
-  // committed to a branch would fail every consumer rather than just this job.
-  const next = versionSchema.parse({ version: latest, sha256 })
-  await writeFile(VERSION_FILE, `${JSON.stringify(next, null, 2)}\n`)
+  await writeFile(
+    VERSION_FILE,
+    `${JSON.stringify({ version: latest, sha256 } satisfies ClocVersion, null, 2)}\n`
+  )
 
   console.log(`cloc v${current.version} -> v${latest} (sha256 ${sha256})`)
   await report({ outdated: 'true', version: latest, previous: current.version })

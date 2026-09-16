@@ -135,10 +135,11 @@ describe('runClocDiff', () => {
     expect(report.added?.['logo.bin']).toBeUndefined()
   }, 60_000)
 
-  it('resolves to an empty report when cloc writes none at all', async () => {
-    // cloc writes no report file rather than an empty one when neither
-    // revision holds a single countable file, so the parse has to tolerate a
-    // missing path rather than throw.
+  /**
+   * A repository holding nothing cloc can count, for which it writes no report
+   * file at all. Returns the range and a cleanup.
+   */
+  const uncountableRepo = () => {
     const bare = mkdtempSync(join(tmpdir(), 'cloc-bare-'))
     const bareGit = (...args: string[]) =>
       execFileSync('git', args, { cwd: bare, encoding: 'utf8' }).trim()
@@ -155,17 +156,31 @@ describe('runClocDiff', () => {
     bareGit('commit', '-q', '-m', 'another binary')
     const head = bareGit('rev-parse', 'HEAD')
 
+    return {
+      cwd: bare,
+      base,
+      head,
+      cleanup: () => rmSync(bare, { recursive: true, force: true }),
+    }
+  }
+
+  it('resolves to an empty report when the range holds nothing countable', async () => {
+    // Deliberately asserts the outcome, not the mechanism: cloc 2.10 signals
+    // this with a `{}` report and 2.06 by writing no file, and both must read
+    // as no counted lines.
+    const { cwd, base, head, cleanup } = uncountableRepo()
+
     try {
       await expect(
         runClocDiff({
           baseSha: base,
           headSha: head,
-          cwd: bare,
+          cwd,
           reportPath: join(cache, 'bare.json'),
         })
       ).resolves.toEqual({})
     } finally {
-      rmSync(bare, { recursive: true, force: true })
+      cleanup()
     }
   }, 60_000)
 })

@@ -18,7 +18,8 @@
     "@actions/core": "^3",
     "@actions/exec": "^3",
     "@actions/github": "^9",
-    "@actions/tool-cache": "^4"
+    "@actions/tool-cache": "^4",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@biomejs/biome": "^2",

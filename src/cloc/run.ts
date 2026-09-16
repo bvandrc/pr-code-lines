@@ -60,9 +60,19 @@ async function assertPerl(): Promise<void> {
 }
 
 /**
+ * Per-file limit on cloc's diffing. cloc's own default of 10s is far too low
+ * for a committed bundle: its diff cost climbs roughly quadratically, measured
+ * here at 6s for 16k changed-heavy lines and 68s for 50k. Not unlimited, since
+ * cloc warns that a big file of repeated lines can take `sdiff` hours -- and
+ * with the check below, too low now fails loudly rather than counting wrong.
+ */
+const DIFF_TIMEOUT_SECONDS = 300
+
+/**
  * Counts one revision range, returning cloc's per-file diff. Resolves to an
  * empty report when the range holds nothing cloc can count -- it writes no file
- * at all in that case rather than an empty one.
+ * at all in that case rather than an empty one. Throws rather than returning
+ * counts cloc itself reported an error for.
  */
 export async function runClocDiff({
   baseSha,
@@ -79,6 +89,7 @@ export async function runClocDiff({
   await assertPerl()
   const clocPath = await downloadCloc()
 
+  let output = ''
   await exec(
     'perl',
     [
@@ -89,10 +100,35 @@ export async function runClocDiff({
       headSha,
       '--by-file',
       '--json',
+      `--diff-timeout=${DIFF_TIMEOUT_SECONDS}`,
       `--report-file=${reportPath}`,
     ],
-    { cwd }
+    {
+      cwd,
+      listeners: {
+        stdout: (data) => {
+          output += data.toString()
+        },
+        stderr: (data) => {
+          output += data.toString()
+        },
+      },
+    }
   )
+
+  // cloc exits 0 having written a report that silently drops whatever it could
+  // not diff -- a timed-out file comes back as wholly removed. Its own error
+  // lines are the only signal, so a count we know is wrong fails here instead
+  // of being published as fact.
+  const errors = output
+    .split('\n')
+    .filter((line) => line.startsWith('Diff error'))
+    .map((line) => line.trim())
+  if (errors.length > 0) {
+    throw new Error(
+      `cloc could not diff ${errors.length} file(s), so these counts would be wrong:\n${errors.join('\n')}`
+    )
+  }
 
   // How cloc signals "nothing countable here" depends on its version: 2.10
   // writes `{}`, 2.06 wrote no file at all. Tolerate the absent file so the

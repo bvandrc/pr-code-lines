@@ -67,6 +67,7 @@ Perl is present on all GitHub-hosted runners. On a self-hosted runner without it
 - **Renames** are only as good as `git`'s own rename detection; a heavily edited move may still read as an add plus a delete.
 - **Markdown and plain text have no comment syntax**, so their prose counts as `code`.
 - **Binary and unrecognized files** contribute nothing. A range holding nothing countable resolves to `{}`.
+- **A file cloc cannot diff fails the run.** cloc's diff cost climbs roughly quadratically with the number of changed lines, and it reports a file it gave up on as wholly removed while still exiting 0. The per-file budget is 300s, far above cloc's own 10s default, and any file that still exceeds it is named in an error rather than published as a count.
 
 ## Licence
 

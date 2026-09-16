@@ -47855,6 +47855,7 @@ async function assertPerl() {
     );
   }
 }
+var DIFF_TIMEOUT_SECONDS = 300;
 async function runClocDiff({
   baseSha,
   headSha,
@@ -47863,6 +47864,7 @@ async function runClocDiff({
 }) {
   await assertPerl();
   const clocPath = await downloadCloc();
+  let output2 = "";
   await exec(
     "perl",
     [
@@ -47873,10 +47875,28 @@ async function runClocDiff({
       headSha,
       "--by-file",
       "--json",
+      `--diff-timeout=${DIFF_TIMEOUT_SECONDS}`,
       `--report-file=${reportPath}`
     ],
-    { cwd }
+    {
+      cwd,
+      listeners: {
+        stdout: (data) => {
+          output2 += data.toString();
+        },
+        stderr: (data) => {
+          output2 += data.toString();
+        }
+      }
+    }
   );
+  const errors = output2.split("\n").filter((line) => line.startsWith("Diff error")).map((line) => line.trim());
+  if (errors.length > 0) {
+    throw new Error(
+      `cloc could not diff ${errors.length} file(s), so these counts would be wrong:
+${errors.join("\n")}`
+    );
+  }
   const raw = await (0, import_promises2.readFile)(reportPath, "utf8").catch(() => null);
   if (raw === null) {
     info(

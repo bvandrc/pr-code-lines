@@ -61,15 +61,13 @@ describe('runClocDiff', () => {
 
     write(
       'a.ts',
-      [
-        'const a = 1',
-        '',
-        '// two',
-        '// comment lines',
-        'const b = 2',
-        'const c = 3',
-        '',
-      ].join('\n')
+      `const a = 1
+
+// two
+// comment lines
+const b = 2
+const c = 3
+`
     )
     const head = commit('add code and comments')
 

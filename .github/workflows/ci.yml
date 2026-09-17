@@ -62,7 +62,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Dogfood: the action counts its own pull request and comments on it.
+      # This repo's own pull requests are the action's first consumer: it counts
+      # this diff and posts the comment, so a change is exercised before release.
       - uses: ./
         with:
           title: PR code lines (self-test)

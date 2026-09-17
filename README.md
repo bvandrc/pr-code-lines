@@ -46,7 +46,7 @@ The action counts from the **merge base** of the two revisions, not from the bas
 
 ### Without the comment
 
-`pull-requests: write` is needed only to post the comment. Set `comment: false` and the action asks for nothing beyond `contents: read`, still writing the table to the job summary and still returning both outputs:
+`pull-requests: write` is needed only to post the comment. Set `comment: false` and the action needs nothing beyond `contents: read`, still writing the table to the job summary and still returning the outputs:
 
 ```yaml
 permissions:

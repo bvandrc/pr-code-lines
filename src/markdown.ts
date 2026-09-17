@@ -74,12 +74,12 @@ export function renderMarkdown(
   if (shown.length > 1) rows.push(row('**Total**', tally.total))
 
   const source = tally.byCategory.source
-  const context = gitHubTotals
+  const gitHubTotalsStr = gitHubTotals
     ? ` &nbsp;·&nbsp; GitHub reports +${gitHubTotals.additions} / −${gitHubTotals.deletions}`
     : ''
 
   lines.push(
-    `**Source code: +${source.added.code} / ~${source.modified.code} / −${source.removed.code}**${context}`,
+    `**Source code: +${source.added.code} / ~${source.modified.code} / −${source.removed.code}**${gitHubTotalsStr}`,
     '',
     markdownTable(
       [['', '+ code', '~ code', '− code', '+ comment', '− comment'], ...rows],

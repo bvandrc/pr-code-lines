@@ -49980,9 +49980,9 @@ function renderMarkdown(tally, {
   );
   if (shown.length > 1) rows.push(row("**Total**", tally.total));
   const source = tally.byCategory.source;
-  const context3 = gitHubTotals ? ` &nbsp;\xB7&nbsp; GitHub reports +${gitHubTotals.additions} / \u2212${gitHubTotals.deletions}` : "";
+  const gitHubTotalsStr = gitHubTotals ? ` &nbsp;\xB7&nbsp; GitHub reports +${gitHubTotals.additions} / \u2212${gitHubTotals.deletions}` : "";
   lines.push(
-    `**Source code: +${source.added.code} / ~${source.modified.code} / \u2212${source.removed.code}**${context3}`,
+    `**Source code: +${source.added.code} / ~${source.modified.code} / \u2212${source.removed.code}**${gitHubTotalsStr}`,
     "",
     markdownTable(
       [["", "+ code", "~ code", "\u2212 code", "+ comment", "\u2212 comment"], ...rows],

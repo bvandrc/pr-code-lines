@@ -24,9 +24,7 @@ export async function postStickyComment({
   }
 
   const octokit = getOctokit(token)
-  // Picked rather than spread whole: a spread would silently carry any field
-  // a future @actions/github adds to context.repo, since excess property
-  // checks do not apply through one.
+  // Picked rather than spread whole, in case other properties ever cause issues.
   const repo = pick(context.repo, ['owner', 'repo'])
   const issue_number = pullRequest.number
 
@@ -35,7 +33,6 @@ export async function postStickyComment({
     issue_number,
     per_page: 100,
   })
-  // The comment itself, not just its body: updating one needs its id.
   const previous = existing.find((comment) => comment.body?.includes(MARKER))
   const prevBody = previous?.body
   const nextBody = `${body}\n\n${MARKER}`

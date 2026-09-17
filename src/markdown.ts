@@ -3,6 +3,8 @@
  * summary and the `markdown` output.
  */
 
+import { markdownTable } from 'markdown-table'
+
 import { CHANGE_KINDS } from './cloc/run.ts'
 import {
   type CategoryTally,
@@ -31,7 +33,14 @@ const hasAnyLine = (tally: CategoryTally) =>
   )
 
 const row = (label: string, tally: CategoryTally) =>
-  `| ${label} | ${tally.added.code} | ${tally.modified.code} | ${tally.removed.code} | ${tally.added.comment} | ${tally.removed.comment} |`
+  [
+    label,
+    tally.added.code,
+    tally.modified.code,
+    tally.removed.code,
+    tally.added.comment,
+    tally.removed.comment,
+  ].map(String)
 
 /**
  * Renders one diff as a table. Returns markdown ready to post or display, with
@@ -62,20 +71,28 @@ export function renderMarkdown(
     ? ` &nbsp;·&nbsp; GitHub reports +${gitHubTotals.additions} / −${gitHubTotals.deletions}`
     : ''
 
+  const rows = shown.map((category) =>
+    row(CATEGORY_LABELS[category], tally.byCategory[category])
+  )
+  if (shown.length > 1) rows.push(row('**Total**', tally.total))
+
   lines.push(
     `**Source code: +${source.added.code} / ~${source.modified.code} / −${source.removed.code}**${context}`,
     '',
-    '| | + code | ~ code | − code | + comment | − comment |',
-    '| --- | --: | --: | --: | --: | --: |',
-    ...shown.map((category) =>
-      row(CATEGORY_LABELS[category], tally.byCategory[category])
+    markdownTable(
+      [['', '+ code', '~ code', '− code', '+ comment', '− comment'], ...rows],
+      // Counts read as columns of digits; only the labels want the left edge.
+      { align: ['l', 'r', 'r', 'r', 'r', 'r'] }
     )
   )
-  if (shown.length > 1) lines.push(row('**Total**', tally.total))
 
+  // Two elements rather than one paragraph: a single newline would not break
+  // the line, and these are two unrelated caveats.
   lines.push(
     '',
-    `<sub>\`~\` is a line changed in place — cloc counts it once rather than as an add plus a delete, so these columns do not sum to GitHub's. Blank lines are excluded above: +${tally.total.added.blank} / −${tally.total.removed.blank}.</sub>`
+    `<sub>\`~\` is a line changed in place — cloc counts it once rather than as an add plus a delete, so these columns do not sum to GitHub's.</sub>`,
+    '',
+    `<sub>Blank lines are excluded above: +${tally.total.added.blank} / −${tally.total.removed.blank}.</sub>`
   )
 
   return lines.join('\n')

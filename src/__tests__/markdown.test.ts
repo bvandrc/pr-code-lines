@@ -23,10 +23,10 @@ const GLOBS = {
 const rowCells = (markdown: string, label: string) =>
   markdown
     .split('\n')
-    .find((line) => line.startsWith(`| ${label} |`))
-    ?.split('|')
-    .slice(2, -1)
-    .map((cell) => cell.trim())
+    // Trim first: the table pads every cell to its column's width.
+    .map((line) => line.split('|').map((cell) => cell.trim()))
+    .find((cells) => cells[1] === label)
+    ?.slice(2, -1)
 
 const render = (report: ClocDiffReport, globs: CategoryGlobs = GLOBS) =>
   renderMarkdown(tallyDiff(report, globs))

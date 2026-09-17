@@ -39,7 +39,8 @@ async function run(): Promise<void> {
       : undefined
 
   const markdown = renderMarkdown(tally, {
-    title: getInput('title'),
+    // Empty when a caller passes `title: ''`; the default belongs to renderMarkdown.
+    title: getInput('title') || undefined,
     gitHubTotals,
   })
 

@@ -37,12 +37,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 0 # both ends of the range have to be in the clone
+          fetch-depth: 0 # the merge base has to be in the clone
 
       - uses: bvandrc/pr-code-lines@v1
 ```
 
-`fetch-depth: 0` is required. The action counts from the **merge base** of the two revisions, not from the base branch's tip, so a PR isn't billed for commits that landed on the base after it forked — and a shallow clone doesn't have that commit.
+The action counts from the **merge base** of the two revisions, not from the base branch's tip, so a pull request isn't billed for commits that landed on the base after it forked.
 
 ### Without the comment
 

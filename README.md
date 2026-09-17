@@ -12,21 +12,21 @@ The result comes back three ways:
 
 The comment, and the summary table with it:
 
-```md
 ### PR Diff Line Count
 
-**Source code: +91 / ~68 / −9**  ·  GitHub reports +329 / −144
+**Source code: +91 / ~68 / −9** &nbsp;·&nbsp; GitHub reports +329 / −144
 
-|           | + code | ~ code | − code | + comment | − comment |
-| --------- | -----: | -----: | -----: | --------: | --------: |
-| Source    |     91 |     68 |      9 |       106 |        42 |
-| Tests     |     12 |      0 |      0 |         4 |         0 |
-| Docs      |      6 |      0 |      0 |         0 |         0 |
-| Config    |      8 |      0 |      0 |         0 |         0 |
-| **Total** |    117 |     68 |      9 |       110 |        42 |
-```
+|           | +&nbsp;code | ~&nbsp;code | −&nbsp;code | +&nbsp;comment | −&nbsp;comment |
+| :-------- | ----------: | ----------: | ----------: | -------------: | -------------: |
+| Source    |          91 |          68 |           9 |            106 |             42 |
+| Tests     |          12 |           0 |           0 |              4 |              0 |
+| Docs      |           6 |           0 |           0 |              0 |              0 |
+| Config    |           8 |           0 |           0 |              0 |              0 |
+| **Total** |         117 |          68 |           9 |            110 |             42 |
 
-91 lines of source code, next to GitHub's +329.
+<sub>`~` is a line changed in place — cloc counts it once rather than as an add plus a delete, so these columns do not sum to GitHub's.</sub>
+
+<sub>Blank lines are excluded above: +34 / −25.</sub>
 
 ## Usage
 

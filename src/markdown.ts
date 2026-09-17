@@ -5,6 +5,7 @@
 
 import { sum } from 'es-toolkit'
 import { markdownTable } from 'markdown-table'
+import { z } from 'zod'
 
 import { CHANGE_KINDS } from './cloc/run.ts'
 import {
@@ -22,11 +23,16 @@ const CATEGORY_LABELS = {
   config: 'Config',
 } as const satisfies Record<FileCategory, string>
 
-/** GitHub's own PR-level counts, shown alongside ours so the gap is visible. */
-export type GithubDiffTotals = {
-  additions: number
-  deletions: number
-}
+/**
+ * GitHub's own PR-level counts, shown alongside ours so the gap is visible.
+ * Exported as a schema because the event payload they come from is untyped.
+ */
+export const githubDiffTotalsSchema = z.object({
+  additions: z.number(),
+  deletions: z.number(),
+})
+
+export type GithubDiffTotals = z.infer<typeof githubDiffTotalsSchema>
 
 /** Markdown separates blocks by a blank line, not by a newline. */
 const joinBlocks = (blocks: string[]) => blocks.join('\n\n')

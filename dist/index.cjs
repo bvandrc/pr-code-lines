@@ -49952,6 +49952,10 @@ var CATEGORY_LABELS = {
   docs: "Docs",
   config: "Config"
 };
+var githubDiffTotalsSchema = external_exports.object({
+  additions: external_exports.number(),
+  deletions: external_exports.number()
+});
 var joinBlocks = (blocks) => blocks.join("\n\n");
 var hasAnyLine = (tally) => sum(CHANGE_KINDS.flatMap((kind) => Object.values(tally[kind]))) > 0;
 var row = (label, tally) => [
@@ -50033,11 +50037,7 @@ async function run() {
     reportPath: (0, import_node_path2.join)((0, import_node_os.tmpdir)(), "pr-code-lines.json")
   });
   const tally = tallyDiff(report, DEFAULT_CATEGORY_GLOBS);
-  const githubTotals = (() => {
-    if (!pullRequest) return void 0;
-    const { additions, deletions } = pullRequest;
-    return typeof additions === "number" && typeof deletions === "number" ? { additions, deletions } : void 0;
-  })();
+  const githubTotals = githubDiffTotalsSchema.safeParse(pullRequest).data;
   const markdown = renderMarkdown(tally, {
     // Empty when a caller passes `title: ''`; the default belongs to renderMarkdown.
     title: getInput("title") || void 0,

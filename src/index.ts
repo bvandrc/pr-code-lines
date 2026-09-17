@@ -10,7 +10,7 @@ import { getInput, info, setFailed, setOutput, summary } from '@actions/core'
 import { context } from '@actions/github'
 
 import { runClocDiff } from './cloc/run.ts'
-import { type GithubDiffTotals, renderMarkdown } from './markdown.ts'
+import { githubDiffTotalsSchema, renderMarkdown } from './markdown.ts'
 import { resolveShaRange } from './sha.ts'
 import { DEFAULT_CATEGORY_GLOBS, tallyDiff } from './tally.ts'
 
@@ -31,13 +31,9 @@ async function run(): Promise<void> {
   const tally = tallyDiff(report, DEFAULT_CATEGORY_GLOBS)
 
   // Present only on the pull_request event, and only then worth contrasting.
-  const githubTotals: GithubDiffTotals | undefined = (() => {
-    if (!pullRequest) return undefined
-    const { additions, deletions } = pullRequest
-    return typeof additions === 'number' && typeof deletions === 'number'
-      ? { additions, deletions }
-      : undefined
-  })()
+  // The payload is typed `any`, so the schema is what actually checks it -- and
+  // it strips the other ~50 keys rather than passing them on.
+  const githubTotals = githubDiffTotalsSchema.safeParse(pullRequest).data
 
   const markdown = renderMarkdown(tally, {
     // Empty when a caller passes `title: ''`; the default belongs to renderMarkdown.

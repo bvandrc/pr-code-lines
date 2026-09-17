@@ -49961,8 +49961,10 @@ var row = (label, tally) => [
   tally.added.comment,
   tally.removed.comment
 ].map(String);
-function renderMarkdown(tally, options = {}) {
-  const { title = "PR code lines", gitHubTotals } = options;
+function renderMarkdown(tally, {
+  title = "PR code lines",
+  gitHubTotals
+} = {}) {
   const lines = [`### ${title}`, ""];
   const shown = FILE_CATEGORIES.filter(
     (category) => hasAnyLine(tally.byCategory[category])

@@ -28,6 +28,7 @@ export type GitHubDiffTotals = {
   deletions: number
 }
 
+/** Whether a category earned a row: any count, of any kind, above zero. */
 const hasAnyLine = (tally: CategoryTally) =>
   sum(CHANGE_KINDS.flatMap((kind) => Object.values(tally[kind]))) > 0
 
@@ -47,9 +48,11 @@ const row = (label: string, tally: CategoryTally) =>
  */
 export function renderMarkdown(
   tally: DiffTally,
-  options: { title?: string; gitHubTotals?: GitHubDiffTotals } = {}
+  {
+    title = 'PR code lines',
+    gitHubTotals,
+  }: { title?: string; gitHubTotals?: GitHubDiffTotals } = {}
 ): string {
-  const { title = 'PR code lines', gitHubTotals } = options
   const lines = [`### ${title}`, '']
 
   // The tally carries every category; a row is only worth showing for one the

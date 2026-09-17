@@ -32,29 +32,29 @@ const render = (report: ClocDiffReport, globs: CategoryGlobs = GLOBS) =>
   renderMarkdown(tallyDiff(report, globs))
 
 describe('renderMarkdown', () => {
-  it('lays out one row per touched category, and blank lines in a footnote', () => {
+  it('lays out a row per touched category, a total, and a blank-line footnote', () => {
     const markdown = render(
       clocReport({
-        added: { 'src/a.ts': { code: 91, comment: 106, blank: 12 } },
+        added: {
+          'src/a.ts': { code: 91, comment: 106, blank: 12 },
+          'src/a.test.ts': { code: 7, comment: 2, blank: 1 },
+        },
         removed: { 'src/a.ts': { code: 9, comment: 42, blank: 3 } },
       })
     )
 
     // Distinct values in every column: the order is what this pins.
     expect(rowCells(markdown, 'Source')).toEqual(['91', '0', '9', '106', '42'])
-    expect(markdown).toContain('Blank lines are excluded above: +12 / −3.')
+    expect(rowCells(markdown, 'Tests')).toEqual(['7', '0', '0', '2', '0'])
+    expect(rowCells(markdown, '**Total**')).toEqual([
+      '98',
+      '0',
+      '9',
+      '108',
+      '42',
+    ])
+    expect(markdown).toContain('Blank lines are excluded above: +13 / −3.')
     expect(markdown).not.toContain('Generated')
-    expect(markdown).not.toContain('Tests')
-  })
-
-  it('totals across categories', () => {
-    const markdown = render(
-      clocReport({
-        added: { 'src/a.ts': { code: 5 }, 'src/a.test.ts': { code: 2 } },
-      })
-    )
-
-    expect(rowCells(markdown, '**Total**')?.[0]).toBe('7')
   })
 
   it('omits the total row when only one category changed', () => {

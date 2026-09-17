@@ -32658,13 +32658,13 @@ var CC_SANITIZE = /[- ]/g;
 function isLuhnAlgo(digits) {
   let length = digits.length;
   let bit = 1;
-  let sum = 0;
+  let sum2 = 0;
   while (length) {
     const value = digits.charCodeAt(--length) - 48;
     bit ^= 1;
-    sum += bit ? [0, 2, 4, 6, 8, 1, 3, 5, 7, 9][value] : value;
+    sum2 += bit ? [0, 2, 4, 6, 8, 1, 3, 5, 7, 9][value] : value;
   }
-  return sum % 10 === 0;
+  return sum2 % 10 === 0;
 }
 function isValidCreditCard(input2) {
   if (!creditCard.test(input2))
@@ -49685,6 +49685,20 @@ ${errors.join("\n")}`
   return clocDiffReportSchema.parse(JSON.parse(raw));
 }
 
+// node_modules/.pnpm/es-toolkit@1.52.0/node_modules/es-toolkit/dist/array/zipObject.mjs
+function zipObject(keys, values) {
+  const result = {};
+  for (let i = 0; i < keys.length; i++) result[keys[i]] = values[i];
+  return result;
+}
+
+// node_modules/.pnpm/es-toolkit@1.52.0/node_modules/es-toolkit/dist/math/sum.mjs
+function sum(nums) {
+  let result = 0;
+  for (let i = 0; i < nums.length; i++) result += nums[i];
+  return result;
+}
+
 // node_modules/.pnpm/markdown-table@3.0.4/node_modules/markdown-table/index.js
 function defaultStringLength(value) {
   return value.length;
@@ -49826,13 +49840,6 @@ function toAlignment(value) {
   return code === 67 || code === 99 ? 99 : code === 76 || code === 108 ? 108 : code === 82 || code === 114 ? 114 : 0;
 }
 
-// node_modules/.pnpm/es-toolkit@1.52.0/node_modules/es-toolkit/dist/array/zipObject.mjs
-function zipObject(keys, values) {
-  const result = {};
-  for (let i = 0; i < keys.length; i++) result[keys[i]] = values[i];
-  return result;
-}
-
 // src/tally.ts
 var import_picomatch = __toESM(require_picomatch2(), 1);
 var NON_SOURCE_CATEGORIES = ["tests", "generated", "docs", "config"];
@@ -49945,9 +49952,7 @@ var CATEGORY_LABELS = {
   docs: "Docs",
   config: "Config"
 };
-var hasAnyLine = (tally) => CHANGE_KINDS.some(
-  (kind) => tally[kind].code + tally[kind].comment + tally[kind].blank > 0
-);
+var hasAnyLine = (tally) => sum(CHANGE_KINDS.flatMap((kind) => Object.values(tally[kind]))) > 0;
 var row = (label, tally) => [
   label,
   tally.added.code,

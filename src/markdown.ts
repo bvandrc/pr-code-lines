@@ -3,6 +3,7 @@
  * summary and the `markdown` output.
  */
 
+import { sum } from 'es-toolkit'
 import { markdownTable } from 'markdown-table'
 
 import { CHANGE_KINDS } from './cloc/run.ts'
@@ -28,9 +29,7 @@ export type GitHubDiffTotals = {
 }
 
 const hasAnyLine = (tally: CategoryTally) =>
-  CHANGE_KINDS.some(
-    (kind) => tally[kind].code + tally[kind].comment + tally[kind].blank > 0
-  )
+  sum(CHANGE_KINDS.flatMap((kind) => Object.values(tally[kind]))) > 0
 
 const row = (label: string, tally: CategoryTally) =>
   [

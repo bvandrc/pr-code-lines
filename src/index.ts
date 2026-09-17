@@ -14,57 +14,13 @@ import {
   setOutput,
   summary,
 } from '@actions/core'
-import { context, getOctokit } from '@actions/github'
+import { context } from '@actions/github'
 
 import { runClocDiff } from './cloc/run.ts'
 import { githubDiffTotalsSchema, renderMarkdown } from './markdown.ts'
 import { resolveShaRange } from './sha.ts'
+import { postStickyComment } from './sticky-comment.ts'
 import { DEFAULT_CATEGORY_GLOBS, tallyDiff } from './tally.ts'
-
-/** Edits one comment in place across pushes instead of leaving a trail of them. */
-async function postStickyComment(body: string, header: string): Promise<void> {
-  const token = getInput('github-token')
-  const pullRequest = context.payload.pull_request
-  if (!pullRequest) {
-    info('Not a pull request — skipping the comment.')
-    return
-  }
-
-  const marker = `<!-- pr-code-lines: ${header} -->`
-  const octokit = getOctokit(token)
-  const { owner, repo } = context.repo
-  const issue_number = pullRequest.number
-
-  const existing = await octokit.paginate(octokit.rest.issues.listComments, {
-    owner,
-    repo,
-    issue_number,
-    per_page: 100,
-  })
-  const previous = existing.find((comment) => comment.body?.includes(marker))
-  const withMarker = `${body}\n\n${marker}`
-
-  if (previous) {
-    if (previous.body === withMarker) {
-      info('Comment is already up to date.')
-      return
-    }
-    await octokit.rest.issues.updateComment({
-      owner,
-      repo,
-      comment_id: previous.id,
-      body: withMarker,
-    })
-    return
-  }
-
-  await octokit.rest.issues.createComment({
-    owner,
-    repo,
-    issue_number,
-    body: withMarker,
-  })
-}
 
 async function run(): Promise<void> {
   const pullRequest = context.payload.pull_request

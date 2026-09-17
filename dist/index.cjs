@@ -50070,7 +50070,7 @@ async function resolveShaRange({
   return { baseSha: mergeBase.trim(), headSha: head };
 }
 
-// src/index.ts
+// src/sticky-comment.ts
 async function postStickyComment(body, header) {
   const token = getInput("github-token");
   const pullRequest = context2.payload.pull_request;
@@ -50112,6 +50112,8 @@ ${marker}`;
     body: withMarker
   });
 }
+
+// src/index.ts
 async function run() {
   const pullRequest = context2.payload.pull_request;
   const { baseSha, headSha } = await resolveShaRange({

@@ -49988,10 +49988,10 @@ function renderMarkdown(tally, {
       [["", "+ code", "~ code", "\u2212 code", "+ comment", "\u2212 comment"], ...rows],
       // Counts read as columns of digits; only the labels want the left edge.
       { align: ["l", "r", "r", "r", "r", "r"] }
-    )
-  );
-  lines.push(
+    ),
     "",
+    // Two elements rather than one paragraph: a single newline would not break
+    // the line, and these are two unrelated caveats.
     `<sub>\`~\` is a line changed in place \u2014 cloc counts it once rather than as an add plus a delete, so these columns do not sum to GitHub's.</sub>`,
     "",
     `<sub>Blank lines are excluded above: +${tally.total.added.blank} / \u2212${tally.total.removed.blank}.</sub>`

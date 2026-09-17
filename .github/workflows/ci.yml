@@ -48,3 +48,35 @@ jobs:
             echo "::error::dist/ is out of date -- run 'pnpm build' and commit the result."
             exit 1
           fi
+
+  self-test:
+    name: Self-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    # `contents: read` is all the action needs to count and render. Nothing
+    # here writes to the pull request, so the job would rather fail than let
+    # that stay true only by accident.
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # Dogfood: the action counts its own pull request.
+      - uses: ./
+        id: lines
+        with:
+          title: PR code lines (self-test)
+
+      # The outputs and the job summary are all this produces, so an empty or
+      # malformed `json` is the failure worth catching.
+      - name: Check the counts came back
+        env:
+          JSON: ${{ steps.lines.outputs.json }}
+        run: |
+          echo "$JSON" | jq -e '.byCategory.source.added.code >= 0' > /dev/null
+          echo "$JSON" | jq -e '.total.added.code >= 0' > /dev/null
+          echo "$JSON" | jq -c '.total'

@@ -49975,12 +49975,12 @@ function renderMarkdown(tally, {
     );
     return lines.join("\n");
   }
-  const source = tally.byCategory.source;
-  const context3 = gitHubTotals ? ` &nbsp;\xB7&nbsp; GitHub reports +${gitHubTotals.additions} / \u2212${gitHubTotals.deletions}` : "";
   const rows = shown.map(
     (category) => row(CATEGORY_LABELS[category], tally.byCategory[category])
   );
   if (shown.length > 1) rows.push(row("**Total**", tally.total));
+  const source = tally.byCategory.source;
+  const context3 = gitHubTotals ? ` &nbsp;\xB7&nbsp; GitHub reports +${gitHubTotals.additions} / \u2212${gitHubTotals.deletions}` : "";
   lines.push(
     `**Source code: +${source.added.code} / ~${source.modified.code} / \u2212${source.removed.code}**${context3}`,
     "",

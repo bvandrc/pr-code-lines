@@ -68,15 +68,15 @@ export function renderMarkdown(
     return lines.join('\n')
   }
 
-  const source = tally.byCategory.source
-  const context = gitHubTotals
-    ? ` &nbsp;·&nbsp; GitHub reports +${gitHubTotals.additions} / −${gitHubTotals.deletions}`
-    : ''
-
   const rows = shown.map((category) =>
     row(CATEGORY_LABELS[category], tally.byCategory[category])
   )
   if (shown.length > 1) rows.push(row('**Total**', tally.total))
+
+  const source = tally.byCategory.source
+  const context = gitHubTotals
+    ? ` &nbsp;·&nbsp; GitHub reports +${gitHubTotals.additions} / −${gitHubTotals.deletions}`
+    : ''
 
   lines.push(
     `**Source code: +${source.added.code} / ~${source.modified.code} / −${source.removed.code}**${context}`,

@@ -50030,9 +50030,11 @@ async function run() {
     reportPath: (0, import_node_path2.join)((0, import_node_os.tmpdir)(), "pr-code-lines.json")
   });
   const tally = tallyDiff(report, DEFAULT_CATEGORY_GLOBS);
-  const additions = pullRequest?.additions;
-  const deletions = pullRequest?.deletions;
-  const gitHubTotals = typeof additions === "number" && typeof deletions === "number" ? { additions, deletions } : void 0;
+  const gitHubTotals = (() => {
+    if (!pullRequest) return void 0;
+    const { additions, deletions } = pullRequest;
+    return typeof additions === "number" && typeof deletions === "number" ? { additions, deletions } : void 0;
+  })();
   const markdown = renderMarkdown(tally, {
     // Empty when a caller passes `title: ''`; the default belongs to renderMarkdown.
     title: getInput("title") || void 0,

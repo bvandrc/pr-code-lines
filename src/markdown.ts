@@ -34,9 +34,6 @@ export const githubDiffTotalsSchema = z.object({
 
 export type GithubDiffTotals = z.infer<typeof githubDiffTotalsSchema>
 
-/** Markdown separates blocks by a blank line, not by a newline. */
-const joinBlocks = (blocks: string[]) => blocks.join('\n\n')
-
 /** Whether a category earned a row: any count, of any kind, above zero. */
 const hasAnyLine = (tally: CategoryTally) =>
   sum(CHANGE_KINDS.flatMap((kind) => Object.values(tally[kind]))) > 0
@@ -74,7 +71,7 @@ export function renderMarkdown(
     blocks.push(
       'No counted line changes — nothing but renames, moves, or files cloc does not count.'
     )
-    return joinBlocks(blocks)
+    return blocks.join('\n\n')
   }
 
   const rows = shown.map((category) =>
@@ -98,5 +95,5 @@ export function renderMarkdown(
     `<sub>Blank lines are excluded above: +${tally.total.added.blank} / −${tally.total.removed.blank}.</sub>`
   )
 
-  return joinBlocks(blocks)
+  return blocks.join('\n\n')
 }

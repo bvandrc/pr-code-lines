@@ -49956,7 +49956,6 @@ var githubDiffTotalsSchema = external_exports.object({
   additions: external_exports.number(),
   deletions: external_exports.number()
 });
-var joinBlocks = (blocks) => blocks.join("\n\n");
 var hasAnyLine = (tally) => sum(CHANGE_KINDS.flatMap((kind) => Object.values(tally[kind]))) > 0;
 var row = (label, tally) => [
   label,
@@ -49978,7 +49977,7 @@ function renderMarkdown(tally, {
     blocks.push(
       "No counted line changes \u2014 nothing but renames, moves, or files cloc does not count."
     );
-    return joinBlocks(blocks);
+    return blocks.join("\n\n");
   }
   const rows = shown.map(
     (category) => row(CATEGORY_LABELS[category], tally.byCategory[category])
@@ -49996,7 +49995,7 @@ function renderMarkdown(tally, {
     `<sub>\`~\` is a line changed in place \u2014 cloc counts it once rather than as an add plus a delete, so these columns do not sum to GitHub's.</sub>`,
     `<sub>Blank lines are excluded above: +${tally.total.added.blank} / \u2212${tally.total.removed.blank}.</sub>`
   );
-  return joinBlocks(blocks);
+  return blocks.join("\n\n");
 }
 
 // src/sha.ts

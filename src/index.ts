@@ -31,10 +31,11 @@ async function run(): Promise<void> {
   const tally = tallyDiff(report, DEFAULT_CATEGORY_GLOBS)
 
   // Present only on the pull_request event, and only then worth contrasting.
+  const additions = pullRequest?.additions
+  const deletions = pullRequest?.deletions
   const gitHubTotals: GitHubDiffTotals | undefined =
-    typeof pullRequest?.additions === 'number' &&
-    typeof pullRequest?.deletions === 'number'
-      ? { additions: pullRequest.additions, deletions: pullRequest.deletions }
+    typeof additions === 'number' && typeof deletions === 'number'
+      ? { additions, deletions }
       : undefined
 
   const markdown = renderMarkdown(tally, {

@@ -49877,7 +49877,9 @@ async function run() {
     reportPath: (0, import_node_path2.join)((0, import_node_os.tmpdir)(), "pr-code-lines.json")
   });
   const tally = tallyDiff(report, DEFAULT_CATEGORY_GLOBS);
-  const gitHubTotals = typeof pullRequest?.additions === "number" && typeof pullRequest?.deletions === "number" ? { additions: pullRequest.additions, deletions: pullRequest.deletions } : void 0;
+  const additions = pullRequest?.additions;
+  const deletions = pullRequest?.deletions;
+  const gitHubTotals = typeof additions === "number" && typeof deletions === "number" ? { additions, deletions } : void 0;
   const markdown = renderMarkdown(tally, {
     title: getInput("title"),
     gitHubTotals

@@ -11,13 +11,13 @@ The result comes back as outputs and a job summary table, and — if you want it
 
 **Source code: +91 / ~68 / −9**  ·  GitHub reports +329 / −144
 
-| | + code | ~ code | − code | + comment | − comment |
-| --- | --: | --: | --: | --: | --: |
-| Source | 91 | 68 | 9 | 106 | 42 |
-| Tests | 12 | 0 | 0 | 4 | 0 |
-| Docs | 6 | 0 | 0 | 0 | 0 |
-| Config | 8 | 0 | 0 | 0 | 0 |
-| **Total** | 117 | 68 | 9 | 110 | 42 |
+|           | + code | ~ code | − code | + comment | − comment |
+| --------- | -----: | -----: | -----: | --------: | --------: |
+| Source    |     91 |     68 |      9 |       106 |        42 |
+| Tests     |     12 |      0 |      0 |         4 |         0 |
+| Docs      |      6 |      0 |      0 |         0 |         0 |
+| Config    |      8 |      0 |      0 |         0 |         0 |
+| **Total** |    117 |     68 |      9 |       110 |        42 |
 ```
 
 91 lines of source code, next to GitHub's +329.
@@ -72,13 +72,13 @@ CI here runs that path on every pull request, under `contents: read` alone, so i
 
 ## Inputs
 
-| Input | Default | Purpose |
-| --- | --- | --- |
-| `github-token` | `${{ github.token }}` | Token used to post the comment. Needs `pull-requests: write`. |
-| `comment` | `true` | Post the table as a sticky comment. Set `false` to use only the outputs and job summary. |
-| `title` | `PR code lines` | Heading on the comment and the job summary. |
-| `base-sha` | the PR's base | Revision to count from. The merge base of the two is what gets counted. |
-| `head-sha` | the PR's head | Revision to count to. |
+| Input          | Default               | Purpose                                                                                  |
+| -------------- | --------------------- | ---------------------------------------------------------------------------------------- |
+| `github-token` | `${{ github.token }}` | Token used to post the comment. Needs `pull-requests: write`.                            |
+| `comment`      | `true`                | Post the table as a sticky comment. Set `false` to use only the outputs and job summary. |
+| `title`        | `PR code lines`       | Heading on the comment and the job summary.                                              |
+| `base-sha`     | the PR's base         | Revision to count from. The merge base of the two is what gets counted.                  |
+| `head-sha`     | the PR's head         | Revision to count to.                                                                    |
 
 Set both to run outside a `pull_request` event. The comment is skipped when there's no pull request to post it to.
 

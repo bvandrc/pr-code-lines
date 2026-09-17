@@ -41,7 +41,7 @@ Set both to run outside a `pull_request` event.
 
 ### Categories
 
-The categories are matched **in order — tests, then generated, then docs, then config — and the first match wins**, so a spec file under a generated directory is still a test. Anything matching none of them counts as **source**, so an unfamiliar language or an extensionless file is counted rather than quietly dropped.
+The categories are matched **in order** — **tests**, then **generated**, then **docs**, then **config** — and the **first match wins** (i.e., a `.spec` file under a generated directory is still counted as a test). Anything matching none of them counts as **source**. This also means that an unfamiliar language or an extensionless file is counted rather than quietly dropped.
 
 `docs` is prose (`**/*.md`, `**/docs/**`, `LICENSE*`) and `config` is machine-read (`**/*.json`, `**/*.yml`, `**/.github/**`, `Dockerfile*`). They're separate because a 400-line `tsconfig.json` and a 400-line design doc are different news.
 

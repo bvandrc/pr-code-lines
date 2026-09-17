@@ -4,7 +4,7 @@ GitHub tells you a pull request is `+329 −144`. That number counts every line 
 
 This action recounts the same range with [cloc](https://github.com/AlDanial/cloc), which parses comments per language rather than guessing at them, and sorts the changed files into **source**, **tests**, **generated**, **docs**, and **config**.
 
-The result comes back as outputs and a job summary table, and — if you want it — as one sticky pull request comment, kept up to date across pushes:
+The result posts as one sticky pull request comment — optional, and edited in place rather than added to on every push — and comes back as outputs and a job summary table either way:
 
 ```md
 ### PR code lines

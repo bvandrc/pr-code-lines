@@ -17,7 +17,7 @@ const CATEGORY_LABELS = {
   generated: 'Generated',
   docs: 'Docs',
   config: 'Config',
-} satisfies Record<FileCategory, string>
+} as const satisfies Record<FileCategory, string>
 
 /** GitHub's own PR-level counts, shown alongside ours so the gap is visible. */
 export type GitHubDiffTotals = {

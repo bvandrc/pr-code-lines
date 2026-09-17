@@ -14,16 +14,15 @@ import {
 
 type Counts = { code?: number; comment?: number; blank?: number }
 
-/** A cloc count, so a case can name only the fields it cares about. */
-const counts = (c: Counts) => ({ code: 0, comment: 0, blank: 0, ...c })
-
 /** Builds the `--by-file` shape from just the entries a case cares about. */
 const clocReport = (sections: {
   added?: Record<string, Counts>
   modified?: Record<string, Counts>
   removed?: Record<string, Counts>
 }): ClocDiffReport =>
-  mapValues(sections, (files) => mapValues(files ?? {}, counts))
+  mapValues(sections, (files) =>
+    mapValues(files ?? {}, (c) => ({ code: 0, comment: 0, blank: 0, ...c }))
+  )
 
 /** Each category's added code, which is what most of these cases turn on. */
 const codePerCategory = (tally: DiffTally) =>

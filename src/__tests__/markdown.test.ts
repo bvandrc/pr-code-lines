@@ -67,6 +67,6 @@ describe('renderMarkdown', () => {
     const markdown = render({})
 
     expect(markdown).toContain('No counted line changes')
-    expect(markdown).not.toContain('| + code |')
+    expect(markdown).not.toContain('+&nbsp;code')
   })
 })

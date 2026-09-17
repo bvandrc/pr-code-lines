@@ -50046,7 +50046,18 @@ function renderMarkdown(tally, {
   lines.push(
     `**Source code: +${source.added.code} / ~${source.modified.code} / \u2212${source.removed.code}**${ghTotalsStr}`,
     markdownTable(
-      [["", "+ code", "~ code", "\u2212 code", "+ comment", "\u2212 comment"], ...rows],
+      [
+        // Nonbreaking spaces: a narrow column should not wrap "+" off its word.
+        [
+          "",
+          "+&nbsp;code",
+          "~&nbsp;code",
+          "\u2212&nbsp;code",
+          "+&nbsp;comment",
+          "\u2212&nbsp;comment"
+        ],
+        ...rows
+      ],
       // Counts read as columns of digits; only the labels want the left edge.
       { align: ["l", "r", "r", "r", "r", "r"] }
     ),

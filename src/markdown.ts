@@ -87,7 +87,18 @@ export function renderMarkdown(
   lines.push(
     `**Source code: +${source.added.code} / ~${source.modified.code} / −${source.removed.code}**${ghTotalsStr}`,
     markdownTable(
-      [['', '+ code', '~ code', '− code', '+ comment', '− comment'], ...rows],
+      [
+        // Nonbreaking spaces: a narrow column should not wrap "+" off its word.
+        [
+          '',
+          '+&nbsp;code',
+          '~&nbsp;code',
+          '−&nbsp;code',
+          '+&nbsp;comment',
+          '−&nbsp;comment',
+        ],
+        ...rows,
+      ],
       // Counts read as columns of digits; only the labels want the left edge.
       { align: ['l', 'r', 'r', 'r', 'r', 'r'] }
     ),

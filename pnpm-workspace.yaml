@@ -1,0 +1,5 @@
+# npm ran every dependency's install script; pnpm 10 requires each one to be
+# named. esbuild's links the platform binary it fetches as an optional
+# dependency, so it is the one script this repo needs.
+onlyBuiltDependencies:
+  - esbuild

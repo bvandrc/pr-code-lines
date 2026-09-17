@@ -5,25 +5,21 @@ runs:
   using: composite
 
   steps:
+    # Before setup-node, whose pnpm cache asks pnpm where its store lives.
+    # The version comes from package.json's `packageManager`.
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+
     - name: Setup Node.js
       uses: actions/setup-node@v7
       with:
         node-version: '24'
-        cache: 'npm'
+        cache: 'pnpm'
 
-    # `setup-node`'s cache only covers ~/.npm, npm's tarball cache -- `npm ci`
-    # still spends ~20s unpacking those tarballs into node_modules on every job.
-    # Cache the installed tree itself so a hit skips the install outright.
-    # Exact match only, no restore-keys: a partial hit would leave the tree
-    # disagreeing with the lockfile.
-    - name: Cache node_modules
-      id: node-modules-cache
-      uses: actions/cache@v6
-      with:
-        path: node_modules
-        key: node-modules-${{ runner.os }}-${{ runner.arch }}-node24-${{ hashFiles('package-lock.json') }}
-
+    # No node_modules cache: pnpm links the tree from its store rather than
+    # unpacking tarballs into it, so a warm store installs in a second or two
+    # and a cached tree would save nothing worth the chance of it disagreeing
+    # with the lockfile.
     - name: Install dependencies
-      if: steps.node-modules-cache.outputs.cache-hit != 'true'
-      run: npm ci
+      run: pnpm install --frozen-lockfile
       shell: bash

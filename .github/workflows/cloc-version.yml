@@ -23,13 +23,13 @@ jobs:
         id: cloc
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: npm run cloc:check
+        run: pnpm cloc:check
 
       # version.json is compiled into the bundle, so skipping this would open a pull
       # request that fails its own Bundle Current job.
       - name: Rebuild the bundle
         if: steps.cloc.outputs.outdated == 'true'
-        run: npm run build
+        run: pnpm build
 
       - name: Open a pull request
         if: steps.cloc.outputs.outdated == 'true'

@@ -1,7 +1,7 @@
 # Generated files: collapsed in diffs, and kept out of language stats and of
 # whatever PR-size metrics read this attribute. Marks output only.
 
-package-lock.json linguist-generated=true
+pnpm-lock.yaml linguist-generated=true
 
 # The committed action bundle. A JS action has to ship its build, so this is
 # the one generated file that cannot be gitignored -- at ~30k lines it would

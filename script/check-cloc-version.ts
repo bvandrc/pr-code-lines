@@ -4,7 +4,7 @@
  * together, since one without the other fails the checksum at runtime.
  *
  * Run by `.github/workflows/cloc-version.yml`, which opens a pull request from
- * whatever this rewrites. Safe to run by hand: `npm run cloc:check`.
+ * whatever this rewrites. Safe to run by hand: `pnpm cloc:check`.
  */
 
 import { createHash } from 'node:crypto'

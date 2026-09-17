@@ -15,19 +15,23 @@ Conventions live outside this file, synced from https://github.com/bvandrc/bvand
 
 ## Commands
 
-| Command             | Purpose                                        |
-| ------------------- | ---------------------------------------------- |
-| `npm run build`     | Bundle `src/` to `dist/index.cjs` with esbuild |
-| `npm run test:unit` | Vitest unit tests                              |
-| `npm run lint`      | Biome lint                                     |
-| `npm run format`    | Biome format — **run before every commit**     |
-| `npm run ts:check`  | TypeScript check                               |
-| `npm run check`     | ts + lint                                      |
-| `npm run cloc:check`| Compare the pinned cloc release against upstream's latest |
+The package manager is **pnpm** — `packageManager` in `package.json` pins the version, and `corepack` or `pnpm/action-setup` reads it from there. `npm install` would write a `package-lock.json` nothing else honours.
+
+| Command            | Purpose                                        |
+| ------------------ | ---------------------------------------------- |
+| `pnpm install`     | Install dependencies (`--frozen-lockfile` in CI) |
+| `pnpm build`       | Bundle `src/` to `dist/index.cjs` with esbuild |
+| `pnpm test:unit`   | Vitest unit tests                              |
+| `pnpm lint`        | Biome lint                                     |
+| `pnpm format`      | Biome format — **run before every commit**     |
+| `pnpm ts:check`    | TypeScript check                               |
+| `pnpm check`       | ts + lint                                      |
+| `pnpm cloc:check`  | Compare the pinned cloc release against upstream's latest |
 
 ## Gotchas
 
 - **`dist/` is committed on purpose**: a JS action runs its bundle, not its source, so the build cannot be gitignored. `.gitattributes` marks it `linguist-generated` to keep it out of language stats and collapsed in diffs.
+- **pnpm runs no dependency's install script unless it is named**: pnpm 10 blocks them by default, so a package that needs its postinstall gets silently skipped -- the install merely prints an "Ignored build scripts" warning and carries on. `onlyBuiltDependencies` in `pnpm-workspace.yaml` is the allowlist, and `esbuild` is on it. Read that warning when adding a dependency rather than letting it scroll past.
 - **Rebuild `dist/` in the same change as `src/`**: CI fails if the bundle lags behind the source, since the action runs the bundle.
 - **The bundle must stay CommonJS at a `.cjs` path**: `package.json` sets `"type": "module"`, so a CJS bundle at `dist/index.js` is loaded as ESM and throws `require is not defined`.
 - **cloc reports a file it could not diff as wholly removed, and still exits 0**: its per-file diff has a timeout (10s by default) and the cost climbs roughly quadratically with changed lines -- 6s at 16k lines, 68s at 50k. A committed bundle blows through the default, and the resulting report reads as if the whole file was deleted. `run.ts` raises the budget to 300s *and* fails on cloc's own `Diff error` lines, since the alternative is publishing a number that is wrong rather than late. Found by this action miscounting its own pull request: 45,333 lines removed where git said 1,979 added.

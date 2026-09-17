@@ -32,7 +32,7 @@ async function run(): Promise<void> {
 
   // Present only on the pull_request event, and only then worth contrasting.
 
-  const gitHubTotals: GitHubDiffTotals | undefined = (() => {
+  const githubTotals: GitHubDiffTotals | undefined = (() => {
     if (!pullRequest) return undefined
     const { additions, deletions } = pullRequest
     return typeof additions === 'number' && typeof deletions === 'number'
@@ -43,7 +43,7 @@ async function run(): Promise<void> {
   const markdown = renderMarkdown(tally, {
     // Empty when a caller passes `title: ''`; the default belongs to renderMarkdown.
     title: getInput('title') || undefined,
-    gitHubTotals,
+    githubTotals,
   })
 
   setOutput('markdown', markdown)

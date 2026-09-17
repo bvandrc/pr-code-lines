@@ -50,8 +50,8 @@ export function renderMarkdown(
   tally: DiffTally,
   {
     title = 'PR code lines',
-    gitHubTotals,
-  }: { title?: string; gitHubTotals?: GitHubDiffTotals } = {}
+    githubTotals: ghTotals,
+  }: { title?: string; githubTotals?: GitHubDiffTotals } = {}
 ): string {
   const lines = [`### ${title}`, '']
 
@@ -74,12 +74,12 @@ export function renderMarkdown(
   if (shown.length > 1) rows.push(row('**Total**', tally.total))
 
   const source = tally.byCategory.source
-  const gitHubTotalsStr = gitHubTotals
-    ? ` &nbsp;·&nbsp; GitHub reports +${gitHubTotals.additions} / −${gitHubTotals.deletions}`
+  const ghTotalsStr = ghTotals
+    ? ` &nbsp;·&nbsp; GitHub reports +${ghTotals.additions} / −${ghTotals.deletions}`
     : ''
 
   lines.push(
-    `**Source code: +${source.added.code} / ~${source.modified.code} / −${source.removed.code}**${gitHubTotalsStr}`,
+    `**Source code: +${source.added.code} / ~${source.modified.code} / −${source.removed.code}**${ghTotalsStr}`,
     '',
     markdownTable(
       [['', '+ code', '~ code', '− code', '+ comment', '− comment'], ...rows],

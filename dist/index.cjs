@@ -49963,7 +49963,7 @@ var row = (label, tally) => [
 ].map(String);
 function renderMarkdown(tally, {
   title = "PR code lines",
-  gitHubTotals
+  githubTotals: ghTotals
 } = {}) {
   const lines = [`### ${title}`, ""];
   const shown = FILE_CATEGORIES.filter(
@@ -49980,9 +49980,9 @@ function renderMarkdown(tally, {
   );
   if (shown.length > 1) rows.push(row("**Total**", tally.total));
   const source = tally.byCategory.source;
-  const gitHubTotalsStr = gitHubTotals ? ` &nbsp;\xB7&nbsp; GitHub reports +${gitHubTotals.additions} / \u2212${gitHubTotals.deletions}` : "";
+  const ghTotalsStr = ghTotals ? ` &nbsp;\xB7&nbsp; GitHub reports +${ghTotals.additions} / \u2212${ghTotals.deletions}` : "";
   lines.push(
-    `**Source code: +${source.added.code} / ~${source.modified.code} / \u2212${source.removed.code}**${gitHubTotalsStr}`,
+    `**Source code: +${source.added.code} / ~${source.modified.code} / \u2212${source.removed.code}**${ghTotalsStr}`,
     "",
     markdownTable(
       [["", "+ code", "~ code", "\u2212 code", "+ comment", "\u2212 comment"], ...rows],
@@ -50037,7 +50037,7 @@ async function run() {
     reportPath: (0, import_node_path2.join)((0, import_node_os.tmpdir)(), "pr-code-lines.json")
   });
   const tally = tallyDiff(report, DEFAULT_CATEGORY_GLOBS);
-  const gitHubTotals = (() => {
+  const githubTotals = (() => {
     if (!pullRequest) return void 0;
     const { additions, deletions } = pullRequest;
     return typeof additions === "number" && typeof deletions === "number" ? { additions, deletions } : void 0;
@@ -50045,7 +50045,7 @@ async function run() {
   const markdown = renderMarkdown(tally, {
     // Empty when a caller passes `title: ''`; the default belongs to renderMarkdown.
     title: getInput("title") || void 0,
-    gitHubTotals
+    githubTotals
   });
   setOutput("markdown", markdown);
   setOutput("json", JSON.stringify(tally));

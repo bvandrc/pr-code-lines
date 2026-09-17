@@ -49759,12 +49759,16 @@ function tallyDiff(report, globs) {
 
 // src/index.ts
 var readGlobs = (name) => getInput(name).split("\n").map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
+var globsFor = (name) => [
+  ...readGlobs(`${name}-patterns`),
+  ...readGlobs(`extra-${name}-patterns`)
+];
 async function run() {
   const globs = {
-    tests: readGlobs("test-patterns"),
-    generated: readGlobs("generated-patterns"),
-    docs: readGlobs("docs-patterns"),
-    config: readGlobs("config-patterns")
+    tests: globsFor("test"),
+    generated: globsFor("generated"),
+    docs: globsFor("docs"),
+    config: globsFor("config")
   };
   const pullRequest = context2.payload.pull_request;
   const { baseSha, headSha } = await resolveShaRange({

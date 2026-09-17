@@ -19,12 +19,22 @@ const readGlobs = (name: string): string[] =>
     .map((line) => line.trim())
     .filter((line) => line && !line.startsWith('#'))
 
+/**
+ * `<name>-patterns` replaces the defaults; `extra-<name>-patterns` adds to
+ * whichever list is in force. Both, and a workflow can swap one category
+ * wholesale while only extending another.
+ */
+const globsFor = (name: string): string[] => [
+  ...readGlobs(`${name}-patterns`),
+  ...readGlobs(`extra-${name}-patterns`),
+]
+
 async function run(): Promise<void> {
   const globs: CategoryGlobs = {
-    tests: readGlobs('test-patterns'),
-    generated: readGlobs('generated-patterns'),
-    docs: readGlobs('docs-patterns'),
-    config: readGlobs('config-patterns'),
+    tests: globsFor('test'),
+    generated: globsFor('generated'),
+    docs: globsFor('docs'),
+    config: globsFor('config'),
   }
 
   const pullRequest = context.payload.pull_request

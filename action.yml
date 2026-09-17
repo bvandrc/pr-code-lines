@@ -32,6 +32,9 @@ inputs:
       **/*Test.*
       **/*Tests.*
       **/conftest.py
+  extra-test-patterns:
+    description: Globs to add to the tests list, rather than replace it.
+    default: ''
   generated-patterns:
     description: Globs counted as generated, one per line.
     default: |
@@ -56,6 +59,9 @@ inputs:
       **/*_pb2.py
       **/*.g.dart
       **/*.freezed.dart
+  extra-generated-patterns:
+    description: Globs to add to the generated list, rather than replace it.
+    default: ''
   docs-patterns:
     description: Globs counted as docs, one per line.
     default: |
@@ -66,6 +72,9 @@ inputs:
       **/*.txt
       **/docs/**
       **/LICENSE*
+  extra-docs-patterns:
+    description: Globs to add to the docs list, rather than replace it.
+    default: ''
   config-patterns:
     description: Globs counted as config, one per line.
     default: |
@@ -80,6 +89,9 @@ inputs:
       **/Dockerfile*
       **/*.tfvars
 
+  extra-config-patterns:
+    description: Globs to add to the config list, rather than replace it.
+    default: ''
 outputs:
   json:
     description: Every count, as `{byCategory,total}` -- see the README.

@@ -180,6 +180,16 @@ describe("action.yml's default patterns", () => {
     )
   }
 
+  it('declares an extra- input for every category, defaulting to empty', () => {
+    // The appending half of each pair; `globsFor` in index.ts reads both.
+    for (const name of ['test', 'generated', 'docs', 'config']) {
+      expect(action.inputs[`extra-${name}-patterns`]).toEqual({
+        description: expect.any(String),
+        default: '',
+      })
+    }
+  })
+
   it.each([
     ['client/src/lib/storage.ts', 'source'],
     ['server/index.ts', 'source'],

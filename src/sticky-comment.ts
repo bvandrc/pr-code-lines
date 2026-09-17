@@ -5,6 +5,7 @@
 
 import { getInput, info } from '@actions/core'
 import { context, getOctokit } from '@actions/github'
+import { pick } from 'es-toolkit'
 
 /** Identifies our comment among the others on the pull request. */
 const MARKER = '<!-- pr-code-lines -->'
@@ -23,7 +24,10 @@ export async function postStickyComment({
   }
 
   const octokit = getOctokit(token)
-  const repo = context.repo
+  // Picked rather than spread whole: a spread would silently carry any field
+  // a future @actions/github adds to context.repo, since excess property
+  // checks do not apply through one.
+  const repo = pick(context.repo, ['owner', 'repo'])
   const issue_number = pullRequest.number
 
   const existing = await octokit.paginate(octokit.rest.issues.listComments, {

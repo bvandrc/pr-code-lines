@@ -49747,6 +49747,16 @@ function sum(nums) {
   return result;
 }
 
+// node_modules/.pnpm/es-toolkit@1.52.0/node_modules/es-toolkit/dist/object/pick.mjs
+function pick2(obj, keys) {
+  const result = {};
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    if (Object.hasOwn(obj, key)) result[key] = obj[key];
+  }
+  return result;
+}
+
 // node_modules/.pnpm/markdown-table@3.0.4/node_modules/markdown-table/index.js
 function defaultStringLength(value) {
   return value.length;
@@ -50082,7 +50092,7 @@ async function postStickyComment({
     return;
   }
   const octokit = getOctokit(token);
-  const repo = context2.repo;
+  const repo = pick2(context2.repo, ["owner", "repo"]);
   const issue_number = pullRequest.number;
   const existing = await octokit.paginate(octokit.rest.issues.listComments, {
     ...repo,

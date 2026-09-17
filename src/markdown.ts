@@ -59,7 +59,7 @@ export function renderMarkdown(
     githubTotals: ghTotals,
   }: { title?: string; githubTotals?: GithubDiffTotals } = {}
 ): string {
-  const blocks = [`### ${title}`]
+  const lines = [`### ${title}`]
 
   // The tally carries every category; a row is only worth showing for one the
   // diff actually touched.
@@ -68,10 +68,10 @@ export function renderMarkdown(
   )
 
   if (shown.length === 0) {
-    blocks.push(
+    lines.push(
       'No counted line changes — nothing but renames, moves, or files cloc does not count.'
     )
-    return blocks.join('\n\n')
+    return lines.join('\n\n')
   }
 
   const rows = shown.map((category) =>
@@ -84,7 +84,7 @@ export function renderMarkdown(
     ? ` &nbsp;·&nbsp; GitHub reports +${ghTotals.additions} / −${ghTotals.deletions}`
     : ''
 
-  blocks.push(
+  lines.push(
     `**Source code: +${source.added.code} / ~${source.modified.code} / −${source.removed.code}**${ghTotalsStr}`,
     markdownTable(
       [['', '+ code', '~ code', '− code', '+ comment', '− comment'], ...rows],
@@ -95,5 +95,5 @@ export function renderMarkdown(
     `<sub>Blank lines are excluded above: +${tally.total.added.blank} / −${tally.total.removed.blank}.</sub>`
   )
 
-  return blocks.join('\n\n')
+  return lines.join('\n\n')
 }

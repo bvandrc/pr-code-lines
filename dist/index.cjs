@@ -49969,15 +49969,15 @@ function renderMarkdown(tally, {
   title = "PR code lines",
   githubTotals: ghTotals
 } = {}) {
-  const blocks = [`### ${title}`];
+  const lines = [`### ${title}`];
   const shown = FILE_CATEGORIES.filter(
     (category) => hasAnyLine(tally.byCategory[category])
   );
   if (shown.length === 0) {
-    blocks.push(
+    lines.push(
       "No counted line changes \u2014 nothing but renames, moves, or files cloc does not count."
     );
-    return blocks.join("\n\n");
+    return lines.join("\n\n");
   }
   const rows = shown.map(
     (category) => row(CATEGORY_LABELS[category], tally.byCategory[category])
@@ -49985,7 +49985,7 @@ function renderMarkdown(tally, {
   if (shown.length > 1) rows.push(row("**Total**", tally.total));
   const source = tally.byCategory.source;
   const ghTotalsStr = ghTotals ? ` &nbsp;\xB7&nbsp; GitHub reports +${ghTotals.additions} / \u2212${ghTotals.deletions}` : "";
-  blocks.push(
+  lines.push(
     `**Source code: +${source.added.code} / ~${source.modified.code} / \u2212${source.removed.code}**${ghTotalsStr}`,
     markdownTable(
       [["", "+ code", "~ code", "\u2212 code", "+ comment", "\u2212 comment"], ...rows],
@@ -49995,7 +49995,7 @@ function renderMarkdown(tally, {
     `<sub>\`~\` is a line changed in place \u2014 cloc counts it once rather than as an add plus a delete, so these columns do not sum to GitHub's.</sub>`,
     `<sub>Blank lines are excluded above: +${tally.total.added.blank} / \u2212${tally.total.removed.blank}.</sub>`
   );
-  return blocks.join("\n\n");
+  return lines.join("\n\n");
 }
 
 // src/sha.ts
@@ -50036,11 +50036,12 @@ async function run() {
     reportPath: (0, import_node_path2.join)((0, import_node_os.tmpdir)(), "pr-code-lines.json")
   });
   const tally = tallyDiff(report, DEFAULT_CATEGORY_GLOBS);
-  const githubTotals = githubDiffTotalsSchema.safeParse(pullRequest).data;
   const markdown = renderMarkdown(tally, {
     // Empty when a caller passes `title: ''`; the default belongs to renderMarkdown.
     title: getInput("title") || void 0,
-    githubTotals
+    // Present only on the pull_request event. The payload is typed `any`, so the
+    // schema is what checks it -- and strips the other ~50 keys.
+    githubTotals: githubDiffTotalsSchema.safeParse(pullRequest).data
   });
   setOutput("markdown", markdown);
   setOutput("json", JSON.stringify(tally));

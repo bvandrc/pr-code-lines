@@ -30,15 +30,12 @@ async function run(): Promise<void> {
 
   const tally = tallyDiff(report, DEFAULT_CATEGORY_GLOBS)
 
-  // Present only on the pull_request event, and only then worth contrasting.
-  // The payload is typed `any`, so the schema is what actually checks it -- and
-  // it strips the other ~50 keys rather than passing them on.
-  const githubTotals = githubDiffTotalsSchema.safeParse(pullRequest).data
-
   const markdown = renderMarkdown(tally, {
     // Empty when a caller passes `title: ''`; the default belongs to renderMarkdown.
     title: getInput('title') || undefined,
-    githubTotals,
+    // Present only on the pull_request event. The payload is typed `any`, so the
+    // schema is what checks it -- and strips the other ~50 keys.
+    githubTotals: githubDiffTotalsSchema.safeParse(pullRequest).data,
   })
 
   setOutput('markdown', markdown)

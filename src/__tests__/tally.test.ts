@@ -14,11 +14,8 @@ import {
 
 type Counts = { code?: number; comment?: number; blank?: number }
 
-const counts = ({ code = 0, comment = 0, blank = 0 }: Counts) => ({
-  code,
-  comment,
-  blank,
-})
+/** A cloc count, so a case can name only the fields it cares about. */
+const counts = (c: Counts) => ({ code: 0, comment: 0, blank: 0, ...c })
 
 /** Builds the `--by-file` shape from just the entries a case cares about. */
 const clocReport = (sections: {

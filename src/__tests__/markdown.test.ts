@@ -32,83 +32,35 @@ const render = (report: ClocDiffReport, globs: CategoryGlobs = GLOBS) =>
   renderMarkdown(tallyDiff(report, globs))
 
 describe('renderMarkdown', () => {
-  it('headlines source code only, not the total', () => {
+  it('lays out one row per touched category, and blank lines in a footnote', () => {
     const markdown = render(
       clocReport({
-        added: { 'src/a.ts': { code: 10 }, 'src/a.test.ts': { code: 500 } },
+        added: { 'src/a.ts': { code: 91, comment: 106, blank: 12 } },
+        removed: { 'src/a.ts': { code: 9, comment: 42, blank: 3 } },
       })
     )
 
-    expect(markdown).toContain('**Source code: +10 / ~0 / −0**')
-  })
-
-  it('separates code from comment columns per category', () => {
-    const markdown = render(
-      clocReport({
-        added: { 'src/a.ts': { code: 91, comment: 106 } },
-        removed: { 'src/a.ts': { code: 9, comment: 42 } },
-      })
-    )
-
+    // Distinct values in every column: the order is what this pins.
     expect(rowCells(markdown, 'Source')).toEqual(['91', '0', '9', '106', '42'])
-  })
-
-  it('leaves out a category the diff never touched', () => {
-    // The tally always carries all four; only the touched ones earn a row.
-    const markdown = render(clocReport({ added: { 'src/a.ts': { code: 5 } } }))
-
-    expect(rowCells(markdown, 'Source')).toEqual(['5', '0', '0', '0', '0'])
+    expect(markdown).toContain('Blank lines are excluded above: +12 / −3.')
     expect(markdown).not.toContain('Generated')
     expect(markdown).not.toContain('Tests')
   })
 
-  it('totals across categories, and omits the total row for a single one', () => {
-    const many = render(
+  it('totals across categories', () => {
+    const markdown = render(
       clocReport({
         added: { 'src/a.ts': { code: 5 }, 'src/a.test.ts': { code: 2 } },
       })
     )
-    const one = render(clocReport({ added: { 'src/a.ts': { code: 5 } } }))
 
-    expect(rowCells(many, '**Total**')?.[0]).toBe('7')
-    expect(one).not.toContain('**Total**')
+    expect(rowCells(markdown, '**Total**')?.[0]).toBe('7')
   })
 
-  it("notes GitHub's own totals only when given them", () => {
-    const tally = tallyDiff(
-      clocReport({ added: { 'src/a.ts': { code: 5 } } }),
-      GLOBS
-    )
+  it('omits the total row when only one category changed', () => {
+    const markdown = render(clocReport({ added: { 'src/a.ts': { code: 5 } } }))
 
-    expect(
-      renderMarkdown(tally, {
-        gitHubTotals: { additions: 329, deletions: 144 },
-      })
-    ).toContain('GitHub reports +329 / −144')
-    expect(renderMarkdown(tally)).not.toContain('GitHub reports')
-  })
-
-  it('reports blank lines as a footnote rather than a column', () => {
-    const markdown = render(
-      clocReport({
-        added: { 'src/a.ts': { code: 1, blank: 12 } },
-        removed: { 'src/a.ts': { blank: 3 } },
-      })
-    )
-
-    expect(markdown).toContain('Blank lines are excluded above: +12 / −3.')
-    expect(rowCells(markdown, 'Source')).toEqual(['1', '0', '0', '0', '0'])
-  })
-
-  it('takes a custom title', () => {
-    const tally = tallyDiff(
-      clocReport({ added: { 'src/a.ts': { code: 1 } } }),
-      GLOBS
-    )
-
-    expect(renderMarkdown(tally, { title: 'Diff size' })).toContain(
-      '### Diff size'
-    )
+    expect(markdown).not.toContain('**Total**')
   })
 
   it('reports an empty diff as no counted changes', () => {

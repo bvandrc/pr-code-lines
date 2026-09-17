@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { mapValues } from 'es-toolkit'
+import type { PartialDeep } from 'type-fest'
 import { describe, expect, it } from 'vitest'
 import { parse as parseYaml } from 'yaml'
 
@@ -12,21 +13,11 @@ import {
   tallyDiff,
 } from '../tally.ts'
 
-type Counts = { code?: number; comment?: number; blank?: number }
-
-const counts = ({ code = 0, comment = 0, blank = 0 }: Counts) => ({
-  code,
-  comment,
-  blank,
-})
-
 /** Builds the `--by-file` shape from just the entries a case cares about. */
-const clocReport = (sections: {
-  added?: Record<string, Counts>
-  modified?: Record<string, Counts>
-  removed?: Record<string, Counts>
-}): ClocDiffReport =>
-  mapValues(sections, (files) => mapValues(files ?? {}, counts))
+const clocReport = (sections: PartialDeep<ClocDiffReport>): ClocDiffReport =>
+  mapValues(sections, (files) =>
+    mapValues(files ?? {}, (c) => ({ code: 0, comment: 0, blank: 0, ...c }))
+  )
 
 /** Each category's added code, which is what most of these cases turn on. */
 const codePerCategory = (tally: DiffTally) =>

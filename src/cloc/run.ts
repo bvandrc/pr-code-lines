@@ -6,6 +6,7 @@
 import { readFile } from 'node:fs/promises'
 import { info } from '@actions/core'
 import { exec } from '@actions/exec'
+import type { OmitIndexSignature } from 'type-fest'
 import { z } from 'zod'
 
 import { downloadCloc } from './download.ts'
@@ -43,9 +44,17 @@ const clocDiffReportSchema = z
   })
   .loose()
 
-/** One cloc tally. `nFiles` is always 0 in `--by-file` mode, so it goes unread. */
-export type ClocCounts = z.infer<typeof clocCountsSchema>
-export type ClocDiffReport = z.infer<typeof clocDiffReportSchema>
+/**
+ * One cloc tally. Loose parsing keeps a new cloc field from failing the run,
+ * but it has no business in the type: a caller reading `counts.somethingNew`
+ * should be a compile error, not `unknown`. Same for the report below.
+ */
+export type ClocCounts = OmitIndexSignature<z.infer<typeof clocCountsSchema>>
+
+/** cloc's `--diff --by-file --json` shape, keyed by repo-relative path. */
+export type ClocDiffReport = {
+  [K in ChangeKind]?: Record<string, ClocCounts>
+}
 
 async function assertPerl(): Promise<void> {
   const code = await exec('perl', ['--version'], {

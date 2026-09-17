@@ -28,6 +28,9 @@ export type GithubDiffTotals = {
   deletions: number
 }
 
+/** Markdown separates blocks by a blank line, not by a newline. */
+const joinBlocks = (blocks: string[]) => blocks.join('\n\n')
+
 /** Whether a category earned a row: any count, of any kind, above zero. */
 const hasAnyLine = (tally: CategoryTally) =>
   sum(CHANGE_KINDS.flatMap((kind) => Object.values(tally[kind]))) > 0
@@ -53,7 +56,7 @@ export function renderMarkdown(
     githubTotals: ghTotals,
   }: { title?: string; githubTotals?: GithubDiffTotals } = {}
 ): string {
-  const lines = [`### ${title}`, '']
+  const blocks = [`### ${title}`]
 
   // The tally carries every category; a row is only worth showing for one the
   // diff actually touched.
@@ -62,10 +65,10 @@ export function renderMarkdown(
   )
 
   if (shown.length === 0) {
-    lines.push(
+    blocks.push(
       'No counted line changes — nothing but renames, moves, or files cloc does not count.'
     )
-    return lines.join('\n')
+    return joinBlocks(blocks)
   }
 
   const rows = shown.map((category) =>
@@ -78,19 +81,16 @@ export function renderMarkdown(
     ? ` &nbsp;·&nbsp; GitHub reports +${ghTotals.additions} / −${ghTotals.deletions}`
     : ''
 
-  lines.push(
+  blocks.push(
     `**Source code: +${source.added.code} / ~${source.modified.code} / −${source.removed.code}**${ghTotalsStr}`,
-    '',
     markdownTable(
       [['', '+ code', '~ code', '− code', '+ comment', '− comment'], ...rows],
       // Counts read as columns of digits; only the labels want the left edge.
       { align: ['l', 'r', 'r', 'r', 'r', 'r'] }
     ),
-    '',
     `<sub>\`~\` is a line changed in place — cloc counts it once rather than as an add plus a delete, so these columns do not sum to GitHub's.</sub>`,
-    '',
     `<sub>Blank lines are excluded above: +${tally.total.added.blank} / −${tally.total.removed.blank}.</sub>`
   )
 
-  return lines.join('\n')
+  return joinBlocks(blocks)
 }

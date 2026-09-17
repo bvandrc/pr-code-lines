@@ -49952,6 +49952,7 @@ var CATEGORY_LABELS = {
   docs: "Docs",
   config: "Config"
 };
+var joinBlocks = (blocks) => blocks.join("\n\n");
 var hasAnyLine = (tally) => sum(CHANGE_KINDS.flatMap((kind) => Object.values(tally[kind]))) > 0;
 var row = (label, tally) => [
   label,
@@ -49965,15 +49966,15 @@ function renderMarkdown(tally, {
   title = "PR code lines",
   githubTotals: ghTotals
 } = {}) {
-  const lines = [`### ${title}`, ""];
+  const blocks = [`### ${title}`];
   const shown = FILE_CATEGORIES.filter(
     (category) => hasAnyLine(tally.byCategory[category])
   );
   if (shown.length === 0) {
-    lines.push(
+    blocks.push(
       "No counted line changes \u2014 nothing but renames, moves, or files cloc does not count."
     );
-    return lines.join("\n");
+    return joinBlocks(blocks);
   }
   const rows = shown.map(
     (category) => row(CATEGORY_LABELS[category], tally.byCategory[category])
@@ -49981,20 +49982,17 @@ function renderMarkdown(tally, {
   if (shown.length > 1) rows.push(row("**Total**", tally.total));
   const source = tally.byCategory.source;
   const ghTotalsStr = ghTotals ? ` &nbsp;\xB7&nbsp; GitHub reports +${ghTotals.additions} / \u2212${ghTotals.deletions}` : "";
-  lines.push(
+  blocks.push(
     `**Source code: +${source.added.code} / ~${source.modified.code} / \u2212${source.removed.code}**${ghTotalsStr}`,
-    "",
     markdownTable(
       [["", "+ code", "~ code", "\u2212 code", "+ comment", "\u2212 comment"], ...rows],
       // Counts read as columns of digits; only the labels want the left edge.
       { align: ["l", "r", "r", "r", "r", "r"] }
     ),
-    "",
     `<sub>\`~\` is a line changed in place \u2014 cloc counts it once rather than as an add plus a delete, so these columns do not sum to GitHub's.</sub>`,
-    "",
     `<sub>Blank lines are excluded above: +${tally.total.added.blank} / \u2212${tally.total.removed.blank}.</sub>`
   );
-  return lines.join("\n");
+  return joinBlocks(blocks);
 }
 
 // src/sha.ts

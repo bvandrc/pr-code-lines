@@ -16,22 +16,16 @@ import {
   type ClocDiffReport,
 } from './cloc/run.ts'
 
-export const FILE_CATEGORIES = [
-  'source',
-  'tests',
-  'generated',
-  'docs',
-  'config',
-] as const
+const NON_SOURCE_CATEGORIES = ['tests', 'generated', 'docs', 'config'] as const
+
+export const FILE_CATEGORIES = ['source', ...NON_SOURCE_CATEGORIES] as const
 export type FileCategory = (typeof FILE_CATEGORIES)[number]
 
 /** Globs deciding what is what. Anything matching none of them counts as source. */
-export type CategoryGlobs = {
-  tests: string[]
-  generated: string[]
-  docs: string[]
-  config: string[]
-}
+export type CategoryGlobs = Record<
+  (typeof NON_SOURCE_CATEGORIES)[number],
+  string[]
+>
 
 export type CategoryTally = Record<ChangeKind, ClocCounts>
 
@@ -57,22 +51,6 @@ const addInto = (target: ClocCounts, source: ClocCounts) => {
 }
 
 /**
- * First match wins, so a spec file under a generated directory is still a test.
- * `dot: true` because plenty of real paths are under `.github/` or `.config/`,
- * and a glob that silently skips them would undercount without saying so.
- */
-const buildMatchers = (globs: CategoryGlobs) =>
-  [
-    ['tests', globs.tests],
-    ['generated', globs.generated],
-    ['docs', globs.docs],
-    ['config', globs.config],
-  ].map(
-    ([category, patterns]) =>
-      [category, picomatch(patterns as string[], { dot: true })] as const
-  ) as ReadonlyArray<readonly [FileCategory, (path: string) => boolean]>
-
-/**
  * Sums a cloc diff into one tally per category. Every category is present
  * whether or not the diff touched it, so a caller reading one never has to
  * tell "no lines" apart from "key absent".
@@ -81,7 +59,18 @@ export function tallyDiff(
   report: ClocDiffReport,
   globs: CategoryGlobs
 ): DiffTally {
-  const matchers = buildMatchers(globs)
+  // First match wins, so a spec file under a generated directory is still a test.
+  const matchers = NON_SOURCE_CATEGORIES.map(
+    (category) =>
+      [
+        category,
+        picomatch(globs[category], {
+          // because plenty of real paths are under `.github/` or `.config/` and a
+          // glob that silently skips them would undercount without saying so.
+          dot: true,
+        }),
+      ] as const
+  )
   const byCategory = zipObject(
     [...FILE_CATEGORIES],
     FILE_CATEGORIES.map(() => emptyTally())

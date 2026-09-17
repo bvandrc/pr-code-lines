@@ -4,7 +4,7 @@ GitHub tells you a pull request is `+329 −144`. That number counts every line 
 
 This action recounts the same range with [cloc](https://github.com/AlDanial/cloc), which parses comments per language rather than guessing at them, and sorts the changed files into **source**, **tests**, **generated**, **docs**, and **config**.
 
-It renders that as a table for the job summary, and hands it back as an output:
+It posts one sticky comment with the result, keeps it up to date across pushes, and writes the same table to the job summary:
 
 ```md
 ### PR code lines
@@ -22,8 +22,6 @@ It renders that as a table for the job summary, and hands it back as an output:
 
 91 lines of source code, next to GitHub's +329.
 
-> **Status**: this release counts, categorises, and renders. It needs no more than `contents: read`, because nothing writes back to the pull request yet — posting the table as a sticky comment lands next.
-
 ## Usage
 
 ```yaml
@@ -31,6 +29,7 @@ on: pull_request
 
 permissions:
   contents: read
+  pull-requests: write # the table is posted as a sticky comment
 
 jobs:
   count:
@@ -40,23 +39,49 @@ jobs:
         with:
           fetch-depth: 0 # both ends of the range have to be in the clone
 
-      - id: lines
-        uses: bvandrc/pr-code-lines@v1
-
-      - run: echo '${{ fromJSON(steps.lines.outputs.json).byCategory.source.added.code }} lines of source code'
+      - uses: bvandrc/pr-code-lines@v1
 ```
 
 `fetch-depth: 0` is required. The action counts from the **merge base** of the two revisions, not from the base branch's tip, so a PR isn't billed for commits that landed on the base after it forked — and a shallow clone doesn't have that commit.
+
+### Without the comment
+
+`pull-requests: write` is needed only to post the comment. Set `comment: false` and the action asks for nothing beyond `contents: read`, still writing the table to the job summary and still returning both outputs:
+
+```yaml
+permissions:
+  contents: read
+
+jobs:
+  count:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: bvandrc/pr-code-lines@v1
+        id: lines
+        with:
+          comment: false
+
+      - run: echo '${{ steps.lines.outputs.json }}' | jq .total
+```
+
+CI here runs that path on every pull request, under `contents: read` alone, so it stays working.
 
 ## Inputs
 
 | Input | Default | Purpose |
 | --- | --- | --- |
-| `title` | `PR code lines` | Heading on the job summary and the rendered table. |
+| `github-token` | `${{ github.token }}` | Token used to post the comment. Needs `pull-requests: write`. |
+| `comment` | `true` | Post the table as a sticky comment. Set `false` to use only the outputs and job summary. |
+| `comment-header` | `default` | Distinguishes this comment from others by the same action, so two workflows can each keep their own. |
+| `title` | `PR code lines` | Heading on the comment and the job summary. |
 | `base-sha` | the PR's base | Revision to count from. The merge base of the two is what gets counted. |
 | `head-sha` | the PR's head | Revision to count to. |
 
-Set both to run outside a `pull_request` event.
+Set both to run outside a `pull_request` event. The comment is skipped when there's no pull request to post it to.
 
 ## Reading the table
 

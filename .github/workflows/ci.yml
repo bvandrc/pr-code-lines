@@ -53,10 +53,28 @@ jobs:
     name: Self-test
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+      pull-requests: write
 
-    # `contents: read` is all the action needs to count and render. Nothing
-    # here writes to the pull request, so the job would rather fail than let
-    # that stay true only by accident.
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # Dogfood: the action counts its own pull request and comments on it.
+      - uses: ./
+        with:
+          title: PR code lines (self-test)
+
+  self-test-read-only:
+    name: Self-test (no comment)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    # Deliberately without `pull-requests: write`. This is the path a consumer
+    # takes to get the numbers without granting the action write access, so the
+    # job would rather fail here than let that path rot.
     permissions:
       contents: read
 
@@ -65,14 +83,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Dogfood: the action counts its own pull request.
       - uses: ./
         id: lines
         with:
-          title: PR code lines (self-test)
+          comment: false
 
-      # The outputs and the job summary are all this produces, so an empty or
-      # malformed `json` is the failure worth catching.
+      # The outputs and the job summary are all this path produces, so an
+      # empty or malformed `json` is the failure worth catching.
       - name: Check the counts came back
         env:
           JSON: ${{ steps.lines.outputs.json }}

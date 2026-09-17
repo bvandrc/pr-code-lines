@@ -25449,6 +25449,17 @@ function getInput(name, options) {
   }
   return val.trim();
 }
+function getBooleanInput(name, options) {
+  const trueValue = ["true", "True", "TRUE"];
+  const falseValue = ["false", "False", "FALSE"];
+  const val = getInput(name, options);
+  if (trueValue.includes(val))
+    return true;
+  if (falseValue.includes(val))
+    return false;
+  throw new TypeError(`Input does not meet YAML 1.2 "Core Schema" specification: ${name}
+Support boolean input list: \`true | True | TRUE | false | False | FALSE\``);
+}
 function setOutput(name, value) {
   const filePath = process.env["GITHUB_OUTPUT"] || "";
   if (filePath) {
@@ -25552,6 +25563,14 @@ var __awaiter7 = function(thisArg, _arguments, P, generator) {
     step((generator = generator.apply(thisArg, _arguments || [])).next());
   });
 };
+function getAuthString(token, options) {
+  if (!token && !options.auth) {
+    throw new Error("Parameter token or opts.auth is required");
+  } else if (token && options.auth) {
+    throw new Error("Parameters token and opts.auth may not both be specified");
+  }
+  return typeof options.auth === "string" ? options.auth : `token ${token}`;
+}
 function getProxyAgent(destinationUrl) {
   const hc = new httpClient.HttpClient();
   return hc.getAgent(destinationUrl);
@@ -25569,6 +25588,19 @@ function getProxyFetch(destinationUrl) {
 }
 function getApiBaseUrl() {
   return process.env["GITHUB_API_URL"] || "https://api.github.com";
+}
+function getUserAgentWithOrchestrationId(baseUserAgent) {
+  var _a3;
+  const orchId = (_a3 = process.env["ACTIONS_ORCHESTRATION_ID"]) === null || _a3 === void 0 ? void 0 : _a3.trim();
+  if (orchId) {
+    const sanitizedId = orchId.replace(/[^a-z0-9_.-]/gi, "_");
+    const tag = `actions_orchestration_id/${sanitizedId}`;
+    if (baseUserAgent === null || baseUserAgent === void 0 ? void 0 : baseUserAgent.includes(tag))
+      return baseUserAgent;
+    const ua = baseUserAgent ? `${baseUserAgent} ` : "";
+    return `${ua}${tag}`;
+  }
+  return baseUserAgent;
 }
 
 // node_modules/.pnpm/universal-user-agent@7.0.3/node_modules/universal-user-agent/index.js
@@ -29595,9 +29627,25 @@ var defaults = {
   }
 };
 var GitHub = Octokit.plugin(restEndpointMethods, paginateRest).defaults(defaults);
+function getOctokitOptions(token, options) {
+  const opts = Object.assign({}, options || {});
+  const auth2 = getAuthString(token, opts);
+  if (auth2) {
+    opts.auth = auth2;
+  }
+  const userAgent3 = getUserAgentWithOrchestrationId(opts.userAgent);
+  if (userAgent3) {
+    opts.userAgent = userAgent3;
+  }
+  return opts;
+}
 
 // node_modules/.pnpm/@actions+github@9.1.1/node_modules/@actions/github/lib/github.js
 var context2 = new Context();
+function getOctokit(token, options, ...additionalPlugins) {
+  const GitHubWithPlugins = GitHub.plugin(...additionalPlugins);
+  return new GitHubWithPlugins(getOctokitOptions(token, options));
+}
 
 // src/cloc/run.ts
 var import_promises2 = require("node:fs/promises");
@@ -50023,6 +50071,47 @@ async function resolveShaRange({
 }
 
 // src/index.ts
+async function postStickyComment(body, header) {
+  const token = getInput("github-token");
+  const pullRequest = context2.payload.pull_request;
+  if (!pullRequest) {
+    info("Not a pull request \u2014 skipping the comment.");
+    return;
+  }
+  const marker = `<!-- pr-code-lines: ${header} -->`;
+  const octokit = getOctokit(token);
+  const { owner, repo } = context2.repo;
+  const issue_number = pullRequest.number;
+  const existing = await octokit.paginate(octokit.rest.issues.listComments, {
+    owner,
+    repo,
+    issue_number,
+    per_page: 100
+  });
+  const previous = existing.find((comment) => comment.body?.includes(marker));
+  const withMarker = `${body}
+
+${marker}`;
+  if (previous) {
+    if (previous.body === withMarker) {
+      info("Comment is already up to date.");
+      return;
+    }
+    await octokit.rest.issues.updateComment({
+      owner,
+      repo,
+      comment_id: previous.id,
+      body: withMarker
+    });
+    return;
+  }
+  await octokit.rest.issues.createComment({
+    owner,
+    repo,
+    issue_number,
+    body: withMarker
+  });
+}
 async function run() {
   const pullRequest = context2.payload.pull_request;
   const { baseSha, headSha } = await resolveShaRange({
@@ -50046,6 +50135,9 @@ async function run() {
   setOutput("markdown", markdown);
   setOutput("json", JSON.stringify(tally));
   await summary.addRaw(markdown).write();
+  if (getBooleanInput("comment")) {
+    await postStickyComment(markdown, getInput("comment-header"));
+  }
 }
 run().catch((error63) => {
   setFailed(error63 instanceof Error ? error63.message : String(error63));

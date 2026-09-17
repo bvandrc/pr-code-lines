@@ -50024,7 +50024,7 @@ var row = (label, tally) => [
   tally.removed.comment
 ].map(String);
 function renderMarkdown(tally, { githubTotals: ghTotals } = {}) {
-  const lines = ["### PR code lines"];
+  const lines = ["### PR diff line count"];
   const shown = FILE_CATEGORIES.filter(
     (category) => hasAnyLine(tally.byCategory[category])
   );
@@ -50092,7 +50092,7 @@ async function resolveShaRange({
 }
 
 // src/sticky-comment.ts
-var MARKER = "<!-- pr-code-lines -->";
+var MARKER = "<!-- pr-diff-line-count -->";
 async function postStickyComment({
   body
 }) {
@@ -50145,7 +50145,7 @@ async function run() {
   const report = await runClocDiff({
     baseSha,
     headSha,
-    reportPath: (0, import_node_path2.join)((0, import_node_os.tmpdir)(), "pr-code-lines.json")
+    reportPath: (0, import_node_path2.join)((0, import_node_os.tmpdir)(), "pr-diff-line-count.json")
   });
   const tally = tallyDiff(report, DEFAULT_CATEGORY_GLOBS);
   const markdown = renderMarkdown(tally, {

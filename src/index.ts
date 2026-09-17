@@ -33,7 +33,7 @@ async function run(): Promise<void> {
   const report = await runClocDiff({
     baseSha,
     headSha,
-    reportPath: join(tmpdir(), 'pr-code-lines.json'),
+    reportPath: join(tmpdir(), 'pr-diff-line-count.json'),
   })
 
   const tally = tallyDiff(report, DEFAULT_CATEGORY_GLOBS)

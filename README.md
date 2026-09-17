@@ -1,4 +1,4 @@
-# PR Code Lines
+# PR Diff Line Count
 
 GitHub tells you a pull request is `+329 −144`. That number counts every line the diff touches, so 300 lines of doc comments reads exactly like 300 lines of logic, and a regenerated lockfile reads like a rewrite.
 
@@ -13,7 +13,7 @@ The result comes back three ways:
 The comment, and the summary table with it:
 
 ```md
-### PR code lines
+### PR diff line count
 
 **Source code: +91 / ~68 / −9**  ·  GitHub reports +329 / −144
 
@@ -45,7 +45,7 @@ jobs:
         with:
           fetch-depth: 0 # REQUIRED! The merge base has to be in the clone.
 
-      - uses: bvandrc/pr-code-lines@v1
+      - uses: bvandrc/pr-diff-line-count@v1
 ```
 
 The action counts from the **merge base** of the two revisions, not from the base branch's tip, so a pull request isn't billed for commits that landed on the base after it forked.
@@ -66,7 +66,7 @@ jobs:
         with:
           fetch-depth: 0 # REQUIRED! The merge base has to be in the clone.
 
-      - uses: bvandrc/pr-code-lines@v1
+      - uses: bvandrc/pr-diff-line-count@v1
         id: lines
         with:
           comment: false
@@ -117,7 +117,7 @@ A category with no changes is left out of the table, and the `Total` row appears
 
 The categories are matched **in the order above** and the **first match wins** (i.e., a `.spec` file under a generated directory is still counted as a test). **source** is last because it is the fallback, which also means an unfamiliar language or an extensionless file is counted rather than quietly dropped.
 
-The patterns are **not configurable yet** — every repo gets the same list, which keeps the numbers comparable between them. They live in `DEFAULT_CATEGORY_GLOBS` in `src/tally.ts`. Making them overridable is [issue #5](https://github.com/bvandrc/pr-code-lines/issues/5).
+The patterns are **not configurable yet** — every repo gets the same list, which keeps the numbers comparable between them. They live in `DEFAULT_CATEGORY_GLOBS` in `src/tally.ts`. Making them overridable is [issue #5](https://github.com/bvandrc/pr-diff-line-count/issues/5).
 
 ## Outputs
 
@@ -142,7 +142,7 @@ Enough to gate on, with no `jq` step:
 
 ```yaml
       - id: lines
-        uses: bvandrc/pr-code-lines@v1
+        uses: bvandrc/pr-diff-line-count@v1
 
       - if: fromJSON(steps.lines.outputs.json).byCategory.source.added.code > 400
         run: echo "::warning::Large PR — consider splitting it."

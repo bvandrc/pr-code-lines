@@ -8,7 +8,7 @@ import { context, getOctokit } from '@actions/github'
 import { pick } from 'es-toolkit'
 
 /** Identifies our comment among the others on the pull request. */
-const MARKER = '<!-- pr-code-lines -->'
+const MARKER = '<!-- pr-diff-line-count -->'
 
 /** Edits one comment in place across pushes instead of leaving a trail of them. */
 export async function postStickyComment({

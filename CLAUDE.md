@@ -1,4 +1,4 @@
-# PR Code Lines — Claude Code Reference
+# PR Diff Line Count — Claude Code Reference
 
 A GitHub Action that counts the code lines a pull request changes, separating comments and blank lines from code, and tests, generated files, docs, and config from source.
 

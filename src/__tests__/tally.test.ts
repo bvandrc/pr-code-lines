@@ -150,8 +150,9 @@ describe('tallyDiff', () => {
 })
 
 describe('the shipped patterns', () => {
-  // Driven by the constant the action actually runs on, so a case here is a
-  // claim about what users get rather than about a copy of it.
+  // Not a test of glob matching: each case pins one pattern in our own list,
+  // and the .json pair pins the precedence between two of them. Driven by the
+  // constant the action runs on, so a case is a claim about what users get.
   const categoryOf = (file: string) => {
     const tally = tallyDiff(
       clocReport({ added: { [file]: { code: 1 } } }),
@@ -163,8 +164,7 @@ describe('the shipped patterns', () => {
   }
 
   it.each([
-    ['client/src/lib/storage.ts', 'source'],
-    ['server/index.ts', 'source'],
+    // The fallback: an extensionless file and a language nothing here names.
     ['Makefile', 'source'],
     ['src/main/kotlin/App.kt', 'source'],
     ['client/src/lib/__tests__/storage.test.ts', 'tests'],
@@ -172,6 +172,8 @@ describe('the shipped patterns', () => {
     ['pkg/thing_test.go', 'tests'],
     ['src/test/java/AppTest.java', 'tests'],
     ['tests/conftest.py', 'tests'],
+    // Also the precedence pair with tsconfig.json below: both are `**/*.json`,
+    // and generated is matched before config.
     ['package-lock.json', 'generated'],
     ['go.sum', 'generated'],
     ['migrations/0007_add_task_schedule.sql', 'generated'],

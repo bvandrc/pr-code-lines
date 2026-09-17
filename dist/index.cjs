@@ -49719,6 +49719,66 @@ function zipObject(keys, values) {
 var import_picomatch = __toESM(require_picomatch2(), 1);
 var NON_SOURCE_CATEGORIES = ["tests", "generated", "docs", "config"];
 var FILE_CATEGORIES = ["source", ...NON_SOURCE_CATEGORIES];
+var DEFAULT_CATEGORY_GLOBS = {
+  tests: [
+    "**/__tests__/**",
+    "**/__mocks__/**",
+    "**/test/**",
+    "**/tests/**",
+    "**/spec/**",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/*_test.*",
+    "**/*_spec.*",
+    "**/*Test.*",
+    "**/*Tests.*",
+    "**/conftest.py"
+  ],
+  generated: [
+    "**/package-lock.json",
+    "**/yarn.lock",
+    "**/pnpm-lock.yaml",
+    "**/bun.lockb",
+    "**/Cargo.lock",
+    "**/poetry.lock",
+    "**/Gemfile.lock",
+    "**/composer.lock",
+    "**/go.sum",
+    "**/dist/**",
+    "**/build/**",
+    "**/vendor/**",
+    "**/migrations/**",
+    "**/__snapshots__/**",
+    "**/*.min.js",
+    "**/*.min.css",
+    "**/*.generated.*",
+    "**/*.pb.go",
+    "**/*_pb2.py",
+    "**/*.g.dart",
+    "**/*.freezed.dart"
+  ],
+  docs: [
+    "**/*.md",
+    "**/*.mdx",
+    "**/*.rst",
+    "**/*.adoc",
+    "**/*.txt",
+    "**/docs/**",
+    "**/LICENSE*"
+  ],
+  config: [
+    "**/*.json",
+    "**/*.yml",
+    "**/*.yaml",
+    "**/*.toml",
+    "**/*.ini",
+    "**/*.cfg",
+    "**/.editorconfig",
+    "**/.github/**",
+    "**/Dockerfile*",
+    "**/*.tfvars"
+  ]
+};
 var NON_FILE_KEYS = /* @__PURE__ */ new Set(["SUM", "header"]);
 var emptyTally = () => ({
   added: { code: 0, comment: 0, blank: 0 },
@@ -49758,18 +49818,7 @@ function tallyDiff(report, globs) {
 }
 
 // src/index.ts
-var readGlobs = (name) => getInput(name).split("\n").map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
-var globsFor = (name) => [
-  ...readGlobs(`${name}-patterns`),
-  ...readGlobs(`extra-${name}-patterns`)
-];
 async function run() {
-  const globs = {
-    tests: globsFor("test"),
-    generated: globsFor("generated"),
-    docs: globsFor("docs"),
-    config: globsFor("config")
-  };
   const pullRequest = context2.payload.pull_request;
   const { baseSha, headSha } = await resolveShaRange({
     base: getInput("base-sha") || pullRequest?.base?.sha,
@@ -49781,7 +49830,7 @@ async function run() {
     headSha,
     reportPath: (0, import_node_path2.join)((0, import_node_os.tmpdir)(), "pr-code-lines.json")
   });
-  setOutput("json", JSON.stringify(tallyDiff(report, globs)));
+  setOutput("json", JSON.stringify(tallyDiff(report, DEFAULT_CATEGORY_GLOBS)));
 }
 run().catch((error63) => {
   setFailed(error63 instanceof Error ? error63.message : String(error63));

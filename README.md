@@ -36,40 +36,16 @@ jobs:
 | --- | --- | --- |
 | `base-sha` | the PR's base | Revision to count from. The merge base of the two is what gets counted. |
 | `head-sha` | the PR's head | Revision to count to. |
-| `test-patterns` | see `action.yml` | Globs counted as tests. |
-| `generated-patterns` | see `action.yml` | Globs counted as generated. |
-| `docs-patterns` | see `action.yml` | Globs counted as docs. |
-| `config-patterns` | see `action.yml` | Globs counted as config. |
-| `extra-*-patterns` | — | Globs to **add** to a category, keeping its defaults. |
 
-Set both revisions to run outside a `pull_request` event.
+Set both to run outside a `pull_request` event.
 
 ### Categories
 
-The four pattern inputs are matched **in that order — tests, then generated, then docs, then config — and the first match wins**, so a spec file under a generated directory is still a test. Anything matching none of them counts as **source**, so an unfamiliar language or an extensionless file is counted rather than quietly dropped.
+The categories are matched **in order — tests, then generated, then docs, then config — and the first match wins**, so a spec file under a generated directory is still a test. Anything matching none of them counts as **source**, so an unfamiliar language or an extensionless file is counted rather than quietly dropped.
 
-`docs` is prose (`**/*.md`, `**/docs/**`, `LICENSE*`) and `config` is machine-read (`**/*.json`, `**/*.yml`, `**/.github/**`, `Dockerfile*`). They're separate because a 400-line `tsconfig.json` and a 400-line design doc are different news, and lumping them together made a workflow change read as documentation.
+`docs` is prose (`**/*.md`, `**/docs/**`, `LICENSE*`) and `config` is machine-read (`**/*.json`, `**/*.yml`, `**/.github/**`, `Dockerfile*`). They're separate because a 400-line `tsconfig.json` and a 400-line design doc are different news.
 
-The defaults cover the usual conventions across ecosystems (`**/__tests__/**`, `**/*_test.go`, `**/package-lock.json`, `**/dist/**`, …) and live in `action.yml`.
-
-**Replace or extend, per category.** `test-patterns` *replaces* the tests list; `extra-test-patterns` *adds* to whichever list is in force. Each category has both, so one can be swapped wholesale while another is only extended:
-
-```yaml
-- uses: bvandrc/pr-code-lines@v1
-  with:
-    # Our fixtures are tests; the other three categories keep their defaults.
-    extra-test-patterns: |
-      **/fixtures/**
-      **/*.fixture.*
-    # Nothing in this repo is vendored, and we count our migrations as source.
-    generated-patterns: |
-      **/package-lock.json
-      **/dist/**
-```
-
-An `extra-` list joins its category at the same precedence, so it still loses to an earlier category: adding `action.yml` to `extra-docs-patterns` takes it out of config, because docs is matched first.
-
-Each pattern input takes **one glob per line** — a newline is the only separator, because a brace glob such as `**/*.{js,ts}` contains a comma of its own.
+The patterns are **not configurable yet** — every repo gets the same list, which keeps the numbers comparable between them. They live in `DEFAULT_CATEGORY_GLOBS` in `src/tally.ts` and cover the usual conventions across ecosystems (`**/__tests__/**`, `**/*_test.go`, `**/package-lock.json`, `**/dist/**`, …). Making them overridable is tracked separately.
 
 ## Output
 

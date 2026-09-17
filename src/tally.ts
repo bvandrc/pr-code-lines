@@ -21,6 +21,72 @@ const NON_SOURCE_CATEGORIES = ['tests', 'generated', 'docs', 'config'] as const
 export const FILE_CATEGORIES = ['source', ...NON_SOURCE_CATEGORIES] as const
 export type FileCategory = (typeof FILE_CATEGORIES)[number]
 
+/**
+ * The globs each category is decided by. Not configurable yet -- a workflow
+ * gets these or nothing, which keeps the categories comparable across repos
+ * until someone needs otherwise.
+ */
+export const DEFAULT_CATEGORY_GLOBS = {
+  tests: [
+    '**/__tests__/**',
+    '**/__mocks__/**',
+    '**/test/**',
+    '**/tests/**',
+    '**/spec/**',
+    '**/*.test.*',
+    '**/*.spec.*',
+    '**/*_test.*',
+    '**/*_spec.*',
+    '**/*Test.*',
+    '**/*Tests.*',
+    '**/conftest.py',
+  ],
+  generated: [
+    '**/package-lock.json',
+    '**/yarn.lock',
+    '**/pnpm-lock.yaml',
+    '**/bun.lockb',
+    '**/Cargo.lock',
+    '**/poetry.lock',
+    '**/Gemfile.lock',
+    '**/composer.lock',
+    '**/go.sum',
+    '**/dist/**',
+    '**/build/**',
+    '**/vendor/**',
+    '**/migrations/**',
+    '**/__snapshots__/**',
+    '**/*.min.js',
+    '**/*.min.css',
+    '**/*.generated.*',
+    '**/*.pb.go',
+    '**/*_pb2.py',
+    '**/*.g.dart',
+    '**/*.freezed.dart',
+  ],
+  docs: [
+    '**/*.md',
+    '**/*.mdx',
+    '**/*.rst',
+    '**/*.adoc',
+    '**/*.txt',
+    '**/docs/**',
+    '**/LICENSE*',
+  ],
+  config: [
+    '**/*.json',
+    '**/*.yml',
+    '**/*.yaml',
+    '**/*.toml',
+    '**/*.ini',
+    '**/*.cfg',
+    '**/.editorconfig',
+    '**/.github/**',
+    '**/Dockerfile*',
+    '**/*.tfvars',
+  ],
+} as const satisfies CategoryGlobs
+
 /** Globs deciding what is what. Anything matching none of them counts as source. */
 export type CategoryGlobs = Record<
   (typeof NON_SOURCE_CATEGORIES)[number],

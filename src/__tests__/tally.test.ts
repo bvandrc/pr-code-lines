@@ -1,13 +1,11 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { mapValues } from 'es-toolkit'
 import type { PartialDeep } from 'type-fest'
 import { describe, expect, it } from 'vitest'
-import { parse as parseYaml } from 'yaml'
 
 import type { ClocDiffReport } from '../cloc/run.ts'
 import {
   type CategoryGlobs,
+  DEFAULT_CATEGORY_GLOBS,
   type DiffTally,
   FILE_CATEGORIES,
   tallyDiff,
@@ -151,44 +149,18 @@ describe('tallyDiff', () => {
   })
 })
 
-describe("action.yml's default patterns", () => {
-  // Read from action.yml rather than copied here: the defaults users actually
-  // get are the ones worth pinning, and a copy would drift from them silently.
-  const action = parseYaml(
-    readFileSync(join(import.meta.dirname, '../../action.yml'), 'utf8')
-  )
-  const defaults = (name: string): string[] =>
-    action.inputs[name].default
-      .split('\n')
-      .map((line: string) => line.trim())
-      .filter(Boolean)
-
-  const DEFAULT_GLOBS: CategoryGlobs = {
-    tests: defaults('test-patterns'),
-    generated: defaults('generated-patterns'),
-    docs: defaults('docs-patterns'),
-    config: defaults('config-patterns'),
-  }
-
+describe('the shipped patterns', () => {
+  // Driven by the constant the action actually runs on, so a case here is a
+  // claim about what users get rather than about a copy of it.
   const categoryOf = (file: string) => {
     const tally = tallyDiff(
       clocReport({ added: { [file]: { code: 1 } } }),
-      DEFAULT_GLOBS
+      DEFAULT_CATEGORY_GLOBS
     )
     return FILE_CATEGORIES.find(
       (category) => tally.byCategory[category].added.code > 0
     )
   }
-
-  it('declares an extra- input for every category, defaulting to empty', () => {
-    // The appending half of each pair; `globsFor` in index.ts reads both.
-    for (const name of ['test', 'generated', 'docs', 'config']) {
-      expect(action.inputs[`extra-${name}-patterns`]).toEqual({
-        description: expect.any(String),
-        default: '',
-      })
-    }
-  })
 
   it.each([
     ['client/src/lib/storage.ts', 'source'],

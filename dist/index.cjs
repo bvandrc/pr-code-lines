@@ -49717,13 +49717,8 @@ function zipObject(keys, values) {
 
 // src/tally.ts
 var import_picomatch = __toESM(require_picomatch2(), 1);
-var FILE_CATEGORIES = [
-  "source",
-  "tests",
-  "generated",
-  "docs",
-  "config"
-];
+var NON_SOURCE_CATEGORIES = ["tests", "generated", "docs", "config"];
+var FILE_CATEGORIES = ["source", ...NON_SOURCE_CATEGORIES];
 var NON_FILE_KEYS = /* @__PURE__ */ new Set(["SUM", "header"]);
 var emptyTally = () => ({
   added: { code: 0, comment: 0, blank: 0 },
@@ -49735,16 +49730,17 @@ var addInto = (target, source) => {
   target.comment += source.comment;
   target.blank += source.blank;
 };
-var buildMatchers = (globs) => [
-  ["tests", globs.tests],
-  ["generated", globs.generated],
-  ["docs", globs.docs],
-  ["config", globs.config]
-].map(
-  ([category, patterns]) => [category, (0, import_picomatch.default)(patterns, { dot: true })]
-);
 function tallyDiff(report, globs) {
-  const matchers = buildMatchers(globs);
+  const matchers = NON_SOURCE_CATEGORIES.map(
+    (category) => [
+      category,
+      (0, import_picomatch.default)(globs[category], {
+        // because plenty of real paths are under `.github/` or `.config/` and a
+        // glob that silently skips them would undercount without saying so.
+        dot: true
+      })
+    ]
+  );
   const byCategory = zipObject(
     [...FILE_CATEGORIES],
     FILE_CATEGORIES.map(() => emptyTally())

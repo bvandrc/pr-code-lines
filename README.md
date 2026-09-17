@@ -45,7 +45,7 @@ The categories are matched **in order — tests, then generated, then docs, then
 
 `docs` is prose (`**/*.md`, `**/docs/**`, `LICENSE*`) and `config` is machine-read (`**/*.json`, `**/*.yml`, `**/.github/**`, `Dockerfile*`). They're separate because a 400-line `tsconfig.json` and a 400-line design doc are different news.
 
-The patterns are **not configurable yet** — every repo gets the same list, which keeps the numbers comparable between them. They live in `DEFAULT_CATEGORY_GLOBS` in `src/tally.ts` and cover the usual conventions across ecosystems (`**/__tests__/**`, `**/*_test.go`, `**/package-lock.json`, `**/dist/**`, …). Making them overridable is tracked separately.
+The patterns are **not configurable yet** — every repo gets the same list, which keeps the numbers comparable between them. They live in `DEFAULT_CATEGORY_GLOBS` in `src/tally.ts` and cover the usual conventions across ecosystems (`**/__tests__/**`, `**/*_test.go`, `**/package-lock.json`, `**/dist/**`, …). Making them overridable is [issue #5](https://github.com/bvandrc/pr-code-lines/issues/5).
 
 ## Output
 

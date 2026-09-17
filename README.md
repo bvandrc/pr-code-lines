@@ -41,13 +41,13 @@ Set both to run outside a `pull_request` event.
 
 ### Categories
 
-- **source** — the code the change is actually about: anything matching none of the patterns below.
 - **tests** — specs, fixtures, and mocks: `**/__tests__/**`, `**/*.test.*`, `**/*_test.*`, `**/spec/**`, `**/conftest.py`, …
 - **generated** — machine-written and committed: lockfiles, `**/dist/**`, `**/build/**`, `**/vendor/**`, `**/*.pb.go`, `**/__snapshots__/**`, `**/*.min.js`, …
 - **docs** — prose: `**/*.md`, `**/*.rst`, `**/*.adoc`, `**/docs/**`, `LICENSE*`
 - **config** — machine-read settings: `**/*.json`, `**/*.yml`, `**/*.toml`, `**/*.ini`, `**/.github/**`, `**/Dockerfile*`, `**/*.tfvars`
+- **source** — the code the change is actually about: everything matching none of the above.
 
-The categories are matched **in order** — **tests**, then **generated**, then **docs**, then **config** — and the **first match wins** (i.e., a `.spec` file under a generated directory is still counted as a test). Anything matching none of them counts as **source**. This also means that an unfamiliar language or an extensionless file is counted rather than quietly dropped.
+The categories are matched **in the order above** and the **first match wins** (i.e., a `.spec` file under a generated directory is still counted as a test). **source** is last because it is the fallback, which also means an unfamiliar language or an extensionless file is counted rather than quietly dropped.
 
 `docs` and `config` are split because a 400-line `tsconfig.json` and a 400-line design doc are different news, and lumping them together made a workflow change read as documentation.
 

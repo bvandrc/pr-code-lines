@@ -66,8 +66,6 @@ jobs:
       # this diff and posts the comment, so a change is exercised before release.
       - uses: ./
         id: lines
-        with:
-          title: PR code lines (self-test)
 
       # Same check as the read-only job: the comment is posted by the action
       # itself, so the outputs are what tells us this path produced real counts

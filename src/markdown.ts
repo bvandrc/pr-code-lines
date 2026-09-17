@@ -54,12 +54,9 @@ const row = (label: string, tally: CategoryTally) =>
  */
 export function renderMarkdown(
   tally: DiffTally,
-  {
-    title = 'PR code lines',
-    githubTotals: ghTotals,
-  }: { title?: string; githubTotals?: GithubDiffTotals } = {}
+  { githubTotals: ghTotals }: { githubTotals?: GithubDiffTotals } = {}
 ): string {
-  const lines = [`### ${title}`]
+  const lines = ['### PR code lines']
 
   // The tally carries every category; a row is only worth showing for one the
   // diff actually touched.

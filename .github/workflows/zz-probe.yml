@@ -1,0 +1,36 @@
+name: env probe
+on: push
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          STEP_SCOPED: hello
+        run: echo "step with its own env ran"
+
+      - name: A later step sees the earlier step's env?
+        run: echo "PROBE1 STEP_SCOPED=[${STEP_SCOPED:-EMPTY}]"
+
+      - name: A step's own if sees its own env block?
+        if: env.OWN == 'yes'
+        env:
+          OWN: yes
+        run: echo "PROBE2 own env visible in own if"
+
+      - name: Marker after the own-if step
+        if: always()
+        run: echo "PROBE2b reached"
+
+      - run: echo "SOURCE_ADDED=500" >> "$GITHUB_ENV"
+
+      - name: Gate via env context, threshold below
+        if: env.SOURCE_ADDED > 400
+        run: echo "PROBE3 fired, SOURCE_ADDED=$SOURCE_ADDED"
+
+      - name: Gate via env context, threshold above
+        if: env.SOURCE_ADDED > 600
+        run: echo "PROBE4 fired (would be wrong)"
+
+      - name: Marker at end
+        if: always()
+        run: echo "PROBE5 end"

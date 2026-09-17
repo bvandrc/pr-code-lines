@@ -1,0 +1,18 @@
+name: env probe job-level
+on: push
+jobs:
+  first:
+    runs-on: ubuntu-latest
+    outputs:
+      n: ${{ steps.s.outputs.n }}
+    steps:
+      - id: s
+        run: echo "n=500" >> "$GITHUB_OUTPUT"
+
+  joblevel:
+    runs-on: ubuntu-latest
+    steps:
+      - id: s
+        run: echo "n=500" >> "$GITHUB_OUTPUT"
+    env:
+      FROM_STEPS: ${{ steps.s.outputs.n }}

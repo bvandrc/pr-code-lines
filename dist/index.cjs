@@ -50100,25 +50100,26 @@ async function postStickyComment({
     per_page: 100
   });
   const previous = existing.find((comment) => comment.body?.includes(MARKER));
-  const withMarker = `${body}
+  const prevBody = previous?.body;
+  const nextBody = `${body}
 
 ${MARKER}`;
+  if (prevBody === nextBody) {
+    info("Comment is already up to date.");
+    return;
+  }
   if (previous) {
-    if (previous.body === withMarker) {
-      info("Comment is already up to date.");
-      return;
-    }
     await octokit.rest.issues.updateComment({
       ...repo,
       comment_id: previous.id,
-      body: withMarker
+      body: nextBody
     });
     return;
   }
   await octokit.rest.issues.createComment({
     ...repo,
     issue_number,
-    body: withMarker
+    body: nextBody
   });
 }
 

@@ -35,18 +35,21 @@ export async function postStickyComment({
     issue_number,
     per_page: 100,
   })
+  // The comment itself, not just its body: updating one needs its id.
   const previous = existing.find((comment) => comment.body?.includes(MARKER))
-  const withMarker = `${body}\n\n${MARKER}`
+  const prevBody = previous?.body
+  const nextBody = `${body}\n\n${MARKER}`
+
+  if (prevBody === nextBody) {
+    info('Comment is already up to date.')
+    return
+  }
 
   if (previous) {
-    if (previous.body === withMarker) {
-      info('Comment is already up to date.')
-      return
-    }
     await octokit.rest.issues.updateComment({
       ...repo,
       comment_id: previous.id,
-      body: withMarker,
+      body: nextBody,
     })
     return
   }
@@ -54,6 +57,6 @@ export async function postStickyComment({
   await octokit.rest.issues.createComment({
     ...repo,
     issue_number,
-    body: withMarker,
+    body: nextBody,
   })
 }

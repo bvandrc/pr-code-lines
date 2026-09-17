@@ -70,9 +70,11 @@ jobs:
         run: echo "$SOURCE_ADDED lines of source code"
 
       - name: Fail if there is too much new source to review
-        if: fromJSON(steps.lines.outputs.json).byCategory.source.added.code > 400
+        if: env.SOURCE_ADDED > 400
+        env:
+          SOURCE_ADDED: ${{ fromJSON(steps.lines.outputs.json).byCategory.source.added.code }}
         run: |
-          echo "::error::Over 400 lines of new source code -- split this pull request."
+          echo "::error::Over $SOURCE_ADDED lines of new source code -- split this pull request."
           exit 1
 ```
 

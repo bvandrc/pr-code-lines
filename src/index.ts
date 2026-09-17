@@ -31,12 +31,14 @@ async function run(): Promise<void> {
   const tally = tallyDiff(report, DEFAULT_CATEGORY_GLOBS)
 
   // Present only on the pull_request event, and only then worth contrasting.
-  const additions = pullRequest?.additions
-  const deletions = pullRequest?.deletions
-  const gitHubTotals: GitHubDiffTotals | undefined =
-    typeof additions === 'number' && typeof deletions === 'number'
+
+  const gitHubTotals: GitHubDiffTotals | undefined = (() => {
+    if (!pullRequest) return undefined
+    const { additions, deletions } = pullRequest
+    return typeof additions === 'number' && typeof deletions === 'number'
       ? { additions, deletions }
       : undefined
+  })()
 
   const markdown = renderMarkdown(tally, {
     // Empty when a caller passes `title: ''`; the default belongs to renderMarkdown.

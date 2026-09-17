@@ -2,7 +2,7 @@
 
 GitHub tells you a pull request is `+329 −144`. That number counts every line the diff touches, so 300 lines of doc comments reads exactly like 300 lines of logic, and a regenerated lockfile reads like a rewrite.
 
-This action recounts the same range with [cloc](https://github.com/AlDanial/cloc), which parses comments per language rather than guessing at them, and sorts the changed files into source, tests, generated, docs, and config.
+This action recounts the same range with [cloc](https://github.com/AlDanial/cloc), which parses comments per language rather than guessing at them, and sorts the changed files into **source**, **tests**, **generated**, **docs**, and **config**.
 
 > **Status**: this release counts and categorises, and exposes the tallies as outputs. Rendering the table and posting it as a PR comment land next.
 

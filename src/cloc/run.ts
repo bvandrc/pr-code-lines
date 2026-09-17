@@ -6,9 +6,9 @@
 import { readFile } from 'node:fs/promises'
 import { info } from '@actions/core'
 import { exec } from '@actions/exec'
-import type { OmitIndexSignature } from 'type-fest'
 import { z } from 'zod'
 
+import type { OmitIndexSignatureDeep } from '../utils/type-utils.ts'
 import { downloadCloc } from './download.ts'
 
 export const CHANGE_KINDS = ['added', 'modified', 'removed'] as const
@@ -43,28 +43,6 @@ const clocDiffReportSchema = z
     removed: clocSectionSchema.optional(),
   })
   .loose()
-
-/**
- * Strips the `{ [k: string]: unknown }` that `loose()` adds, at every level of
- * a plain data shape. Loose parsing keeps a new cloc field from failing the
- * run, but it has no business in the type: a caller reading
- * `counts.somethingNew` should be a compile error, not `unknown`.
- *
- * A type whose only keys *are* an index signature is a map the schema asked
- * for -- a section keyed by file path -- so those recurse into their values
- * instead of being emptied. Arrays pass through; nothing here holds one.
- */
-type OmitIndexSignatureDeep<T> = T extends readonly unknown[]
-  ? T
-  : T extends object
-    ? keyof OmitIndexSignature<T> extends never
-      ? { [K in keyof T]: OmitIndexSignatureDeep<T[K]> }
-      : {
-          [K in keyof OmitIndexSignature<T>]: OmitIndexSignatureDeep<
-            OmitIndexSignature<T>[K]
-          >
-        }
-    : T
 
 /** One cloc tally, as the counts the schema names and nothing more. */
 export type ClocCounts = OmitIndexSignatureDeep<

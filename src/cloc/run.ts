@@ -45,16 +45,41 @@ const clocDiffReportSchema = z
   .loose()
 
 /**
- * One cloc tally. Loose parsing keeps a new cloc field from failing the run,
- * but it has no business in the type: a caller reading `counts.somethingNew`
- * should be a compile error, not `unknown`. Same for the report below.
+ * Strips the `{ [k: string]: unknown }` that `loose()` adds, at every level of
+ * a plain data shape. Loose parsing keeps a new cloc field from failing the
+ * run, but it has no business in the type: a caller reading
+ * `counts.somethingNew` should be a compile error, not `unknown`.
+ *
+ * A type whose only keys *are* an index signature is a map the schema asked
+ * for -- a section keyed by file path -- so those recurse into their values
+ * instead of being emptied. Arrays pass through; nothing here holds one.
  */
-export type ClocCounts = OmitIndexSignature<z.infer<typeof clocCountsSchema>>
+type OmitIndexSignatureDeep<T> = T extends readonly unknown[]
+  ? T
+  : T extends object
+    ? keyof OmitIndexSignature<T> extends never
+      ? { [K in keyof T]: OmitIndexSignatureDeep<T[K]> }
+      : {
+          [K in keyof OmitIndexSignature<T>]: OmitIndexSignatureDeep<
+            OmitIndexSignature<T>[K]
+          >
+        }
+    : T
 
-/** cloc's `--diff --by-file --json` shape, keyed by repo-relative path. */
-export type ClocDiffReport = {
-  [K in ChangeKind]?: Record<string, ClocCounts>
-}
+/** One cloc tally, as the counts the schema names and nothing more. */
+export type ClocCounts = OmitIndexSignatureDeep<
+  z.infer<typeof clocCountsSchema>
+>
+
+/**
+ * cloc's `--diff --by-file --json` shape: a section per change kind, each
+ * keyed by repo-relative path. Derived from the schema, so the two cannot
+ * drift, with cloc's `same` and `header` siblings left out -- they are parsed
+ * and ignored, not part of what we hand on.
+ */
+export type ClocDiffReport = OmitIndexSignatureDeep<
+  z.infer<typeof clocDiffReportSchema>
+>
 
 async function assertPerl(): Promise<void> {
   const code = await exec('perl', ['--version'], {

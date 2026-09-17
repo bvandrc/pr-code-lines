@@ -24502,8 +24502,8 @@ var Summary = class {
    * @returns {Summary} summary instance
    */
   addTable(rows) {
-    const tableBody = rows.map((row) => {
-      const cells = row.map((cell) => {
+    const tableBody = rows.map((row2) => {
+      const cells = row2.map((cell) => {
         if (typeof cell === "string") {
           return this.wrap("td", cell);
         }
@@ -24603,6 +24603,7 @@ var Summary = class {
   }
 };
 var _summary = new Summary();
+var summary = _summary;
 
 // node_modules/.pnpm/@actions+core@3.0.1/node_modules/@actions/core/lib/platform.js
 var import_os2 = __toESM(require("os"), 1);
@@ -49684,30 +49685,6 @@ ${errors.join("\n")}`
   return clocDiffReportSchema.parse(JSON.parse(raw));
 }
 
-// src/sha.ts
-async function resolveShaRange({
-  base,
-  head
-}) {
-  if (!base || !head) {
-    throw new Error(
-      "No revisions to compare: run this on a `pull_request` event, or pass `base-sha` and `head-sha`."
-    );
-  }
-  let mergeBase = "";
-  const code = await exec("git", ["merge-base", base, head], {
-    ignoreReturnCode: true,
-    silent: true,
-    listeners: { stdout: (data) => mergeBase += data.toString() }
-  });
-  if (code !== 0) {
-    throw new Error(
-      `Could not find a merge base for ${base}...${head}. Check out with \`fetch-depth: 0\`.`
-    );
-  }
-  return { baseSha: mergeBase.trim(), headSha: head };
-}
-
 // node_modules/.pnpm/es-toolkit@1.52.0/node_modules/es-toolkit/dist/array/zipObject.mjs
 function zipObject(keys, values) {
   const result = {};
@@ -49819,6 +49796,73 @@ function tallyDiff(report, globs) {
   return { byCategory, total };
 }
 
+// src/markdown.ts
+var CATEGORY_LABELS = {
+  source: "Source",
+  tests: "Tests",
+  generated: "Generated",
+  docs: "Docs",
+  config: "Config"
+};
+var hasAnyLine = (tally) => CHANGE_KINDS.some(
+  (kind) => tally[kind].code + tally[kind].comment + tally[kind].blank > 0
+);
+var row = (label, tally) => `| ${label} | ${tally.added.code} | ${tally.modified.code} | ${tally.removed.code} | ${tally.added.comment} | ${tally.removed.comment} |`;
+function renderMarkdown(tally, options = {}) {
+  const { title = "PR code lines", gitHubTotals } = options;
+  const lines = [`### ${title}`, ""];
+  const shown = FILE_CATEGORIES.filter(
+    (category) => hasAnyLine(tally.byCategory[category])
+  );
+  if (shown.length === 0) {
+    lines.push(
+      "No counted line changes \u2014 nothing but renames, moves, or files cloc does not count."
+    );
+    return lines.join("\n");
+  }
+  const source = tally.byCategory.source;
+  const context3 = gitHubTotals ? ` &nbsp;\xB7&nbsp; GitHub reports +${gitHubTotals.additions} / \u2212${gitHubTotals.deletions}` : "";
+  lines.push(
+    `**Source code: +${source.added.code} / ~${source.modified.code} / \u2212${source.removed.code}**${context3}`,
+    "",
+    "| | + code | ~ code | \u2212 code | + comment | \u2212 comment |",
+    "| --- | --: | --: | --: | --: | --: |",
+    ...shown.map(
+      (category) => row(CATEGORY_LABELS[category], tally.byCategory[category])
+    )
+  );
+  if (shown.length > 1) lines.push(row("**Total**", tally.total));
+  lines.push(
+    "",
+    `<sub>\`~\` is a line changed in place \u2014 cloc counts it once rather than as an add plus a delete, so these columns do not sum to GitHub's. Blank lines are excluded above: +${tally.total.added.blank} / \u2212${tally.total.removed.blank}.</sub>`
+  );
+  return lines.join("\n");
+}
+
+// src/sha.ts
+async function resolveShaRange({
+  base,
+  head
+}) {
+  if (!base || !head) {
+    throw new Error(
+      "No revisions to compare: run this on a `pull_request` event, or pass `base-sha` and `head-sha`."
+    );
+  }
+  let mergeBase = "";
+  const code = await exec("git", ["merge-base", base, head], {
+    ignoreReturnCode: true,
+    silent: true,
+    listeners: { stdout: (data) => mergeBase += data.toString() }
+  });
+  if (code !== 0) {
+    throw new Error(
+      `Could not find a merge base for ${base}...${head}. Check out with \`fetch-depth: 0\`.`
+    );
+  }
+  return { baseSha: mergeBase.trim(), headSha: head };
+}
+
 // src/index.ts
 async function run() {
   const pullRequest = context2.payload.pull_request;
@@ -49832,7 +49876,15 @@ async function run() {
     headSha,
     reportPath: (0, import_node_path2.join)((0, import_node_os.tmpdir)(), "pr-code-lines.json")
   });
-  setOutput("json", JSON.stringify(tallyDiff(report, DEFAULT_CATEGORY_GLOBS)));
+  const tally = tallyDiff(report, DEFAULT_CATEGORY_GLOBS);
+  const gitHubTotals = typeof pullRequest?.additions === "number" && typeof pullRequest?.deletions === "number" ? { additions: pullRequest.additions, deletions: pullRequest.deletions } : void 0;
+  const markdown = renderMarkdown(tally, {
+    title: getInput("title"),
+    gitHubTotals
+  });
+  setOutput("markdown", markdown);
+  setOutput("json", JSON.stringify(tally));
+  await summary.addRaw(markdown).write();
 }
 run().catch((error63) => {
   setFailed(error63 instanceof Error ? error63.message : String(error63));

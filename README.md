@@ -4,7 +4,25 @@ GitHub tells you a pull request is `+329 −144`. That number counts every line 
 
 This action recounts the same range with [cloc](https://github.com/AlDanial/cloc), which parses comments per language rather than guessing at them, and sorts the changed files into **source**, **tests**, **generated**, **docs**, and **config**.
 
-> **Status**: this release counts and categorises, and exposes the tallies as outputs. Rendering the table and posting it as a PR comment land next.
+It renders that as a table for the job summary, and hands it back as an output:
+
+```md
+### PR code lines
+
+**Source code: +91 / ~68 / −9**  ·  GitHub reports +329 / −144
+
+| | + code | ~ code | − code | + comment | − comment |
+| --- | --: | --: | --: | --: | --: |
+| Source | 91 | 68 | 9 | 106 | 42 |
+| Tests | 12 | 0 | 0 | 4 | 0 |
+| Docs | 6 | 0 | 0 | 0 | 0 |
+| Config | 8 | 0 | 0 | 0 | 0 |
+| **Total** | 117 | 68 | 9 | 110 | 42 |
+```
+
+91 lines of source code, next to GitHub's +329.
+
+> **Status**: this release counts, categorises, and renders. It needs no more than `contents: read`, because nothing writes back to the pull request yet — posting the table as a sticky comment lands next.
 
 ## Usage
 
@@ -34,12 +52,22 @@ jobs:
 
 | Input | Default | Purpose |
 | --- | --- | --- |
+| `title` | `PR code lines` | Heading on the job summary and the rendered table. |
 | `base-sha` | the PR's base | Revision to count from. The merge base of the two is what gets counted. |
 | `head-sha` | the PR's head | Revision to count to. |
 
 Set both to run outside a `pull_request` event.
 
-### Categories
+## Reading the table
+
+- **`+ code` / `− code`** — lines added and removed, excluding comments and blank lines.
+- **`~ code`** — lines changed in place. cloc counts a changed line once, rather than as an add plus a delete, which is why these columns don't sum to GitHub's own `+/−`.
+- **`+ comment` / `− comment`** — comment lines, parsed per language. The headline deliberately leaves them out.
+- Blank lines are counted but kept to a footnote.
+
+A category with no changes is left out of the table, and the `Total` row appears only when more than one category changed.
+
+## Categories
 
 - **tests** — specs, fixtures, and mocks: `**/__tests__/**`, `**/*.test.*`, `**/*_test.*`, `**/spec/**`, `**/conftest.py`, …
 - **generated** — machine-written and committed: lockfiles, `**/dist/**`, `**/build/**`, `**/vendor/**`, `**/*.pb.go`, `**/__snapshots__/**`, `**/*.min.js`, …
@@ -51,9 +79,9 @@ The categories are matched **in the order above** and the **first match wins** (
 
 The patterns are **not configurable yet** — every repo gets the same list, which keeps the numbers comparable between them. They live in `DEFAULT_CATEGORY_GLOBS` in `src/tally.ts`. Making them overridable is [issue #5](https://github.com/bvandrc/pr-code-lines/issues/5).
 
-## Output
+## Outputs
 
-One output, `json`, holding every count:
+Two outputs. `markdown` is the rendered table, for posting somewhere else. `json` holds every count:
 
 ```json
 {

@@ -13,7 +13,7 @@ The result comes back three ways:
 The comment, and the summary table with it:
 
 ```md
-### PR diff line count
+### PR Diff Line Count
 
 **Source code: +91 / ~68 / −9**  ·  GitHub reports +329 / −144
 

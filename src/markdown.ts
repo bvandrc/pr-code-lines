@@ -56,7 +56,7 @@ export function renderMarkdown(
   tally: DiffTally,
   { githubTotals: ghTotals }: { githubTotals?: GithubDiffTotals } = {}
 ): string {
-  const lines = ['### PR diff line count']
+  const lines = ['### PR Diff Line Count']
 
   // The tally carries every category; a row is only worth showing for one the
   // diff actually touched.

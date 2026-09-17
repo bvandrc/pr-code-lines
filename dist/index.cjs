@@ -50024,7 +50024,7 @@ var row = (label, tally) => [
   tally.removed.comment
 ].map(String);
 function renderMarkdown(tally, { githubTotals: ghTotals } = {}) {
-  const lines = ["### PR diff line count"];
+  const lines = ["### PR Diff Line Count"];
   const shown = FILE_CATEGORIES.filter(
     (category) => hasAnyLine(tally.byCategory[category])
   );

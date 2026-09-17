@@ -10,7 +10,7 @@ import { getInput, info, setFailed, setOutput, summary } from '@actions/core'
 import { context } from '@actions/github'
 
 import { runClocDiff } from './cloc/run.ts'
-import { type GitHubDiffTotals, renderMarkdown } from './markdown.ts'
+import { type GithubDiffTotals, renderMarkdown } from './markdown.ts'
 import { resolveShaRange } from './sha.ts'
 import { DEFAULT_CATEGORY_GLOBS, tallyDiff } from './tally.ts'
 
@@ -32,7 +32,7 @@ async function run(): Promise<void> {
 
   // Present only on the pull_request event, and only then worth contrasting.
 
-  const githubTotals: GitHubDiffTotals | undefined = (() => {
+  const githubTotals: GithubDiffTotals | undefined = (() => {
     if (!pullRequest) return undefined
     const { additions, deletions } = pullRequest
     return typeof additions === 'number' && typeof deletions === 'number'

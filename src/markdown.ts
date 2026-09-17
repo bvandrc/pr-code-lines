@@ -23,7 +23,7 @@ const CATEGORY_LABELS = {
 } as const satisfies Record<FileCategory, string>
 
 /** GitHub's own PR-level counts, shown alongside ours so the gap is visible. */
-export type GitHubDiffTotals = {
+export type GithubDiffTotals = {
   additions: number
   deletions: number
 }
@@ -51,7 +51,7 @@ export function renderMarkdown(
   {
     title = 'PR code lines',
     githubTotals: ghTotals,
-  }: { title?: string; githubTotals?: GitHubDiffTotals } = {}
+  }: { title?: string; githubTotals?: GithubDiffTotals } = {}
 ): string {
   const lines = [`### ${title}`, '']
 

@@ -49780,15 +49780,17 @@ var DEFAULT_CATEGORY_GLOBS = {
   ]
 };
 var NON_FILE_KEYS = /* @__PURE__ */ new Set(["SUM", "header"]);
-var emptyTally = () => ({
-  added: { code: 0, comment: 0, blank: 0 },
-  modified: { code: 0, comment: 0, blank: 0 },
-  removed: { code: 0, comment: 0, blank: 0 }
-});
+var COUNT_FIELDS = ["code", "comment", "blank"];
+var emptyCounts = () => zipObject(
+  [...COUNT_FIELDS],
+  COUNT_FIELDS.map(() => 0)
+);
+var emptyTally = () => zipObject(
+  [...CHANGE_KINDS],
+  CHANGE_KINDS.map(() => emptyCounts())
+);
 var addInto = (target, source) => {
-  target.code += source.code;
-  target.comment += source.comment;
-  target.blank += source.blank;
+  for (const field of COUNT_FIELDS) target[field] += source[field];
 };
 function tallyDiff(report, globs) {
   const matchers = NON_SOURCE_CATEGORIES.map(

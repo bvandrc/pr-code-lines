@@ -104,16 +104,28 @@ export const DEFAULT_CATEGORY_GLOBS = {
 // cloc mixes these sibling keys in among the per-file entries.
 const NON_FILE_KEYS = new Set(['SUM', 'header'])
 
-const emptyTally = (): CategoryTally => ({
-  added: { code: 0, comment: 0, blank: 0 },
-  modified: { code: 0, comment: 0, blank: 0 },
-  removed: { code: 0, comment: 0, blank: 0 },
-})
+/**
+ * The fields of a cloc count. The `emptyCounts` return annotation is what
+ * keeps this list complete: drop one and the zeroed object stops satisfying
+ * `ClocCounts`.
+ */
+const COUNT_FIELDS = ['code', 'comment', 'blank'] as const
 
+const emptyCounts = (): ClocCounts =>
+  zipObject(
+    [...COUNT_FIELDS],
+    COUNT_FIELDS.map(() => 0)
+  )
+
+const emptyTally = (): CategoryTally =>
+  zipObject(
+    [...CHANGE_KINDS],
+    CHANGE_KINDS.map(() => emptyCounts())
+  )
+
+/** Adds one count into another in place, field by field. */
 const addInto = (target: ClocCounts, source: ClocCounts) => {
-  target.code += source.code
-  target.comment += source.comment
-  target.blank += source.blank
+  for (const field of COUNT_FIELDS) target[field] += source[field]
 }
 
 /**

@@ -21,6 +21,20 @@ const NON_SOURCE_CATEGORIES = ['tests', 'generated', 'docs', 'config'] as const
 export const FILE_CATEGORIES = ['source', ...NON_SOURCE_CATEGORIES] as const
 export type FileCategory = (typeof FILE_CATEGORIES)[number]
 
+/** Globs deciding what is what. Anything matching none of them counts as source. */
+export type CategoryGlobs = Record<
+  (typeof NON_SOURCE_CATEGORIES)[number],
+  string[]
+>
+
+export type CategoryTally = Record<ChangeKind, ClocCounts>
+
+export type DiffTally = {
+  /** Every category, zeroed where the diff touched nothing of that kind. */
+  byCategory: Record<FileCategory, CategoryTally>
+  total: CategoryTally
+}
+
 /**
  * The globs each category is decided by. Not configurable yet -- a workflow
  * gets these or nothing, which keeps the categories comparable across repos
@@ -86,20 +100,6 @@ export const DEFAULT_CATEGORY_GLOBS = {
     '**/*.tfvars',
   ],
 } as const satisfies CategoryGlobs
-
-/** Globs deciding what is what. Anything matching none of them counts as source. */
-export type CategoryGlobs = Record<
-  (typeof NON_SOURCE_CATEGORIES)[number],
-  string[]
->
-
-export type CategoryTally = Record<ChangeKind, ClocCounts>
-
-export type DiffTally = {
-  /** Every category, zeroed where the diff touched nothing of that kind. */
-  byCategory: Record<FileCategory, CategoryTally>
-  total: CategoryTally
-}
 
 // cloc mixes these sibling keys in among the per-file entries.
 const NON_FILE_KEYS = new Set(['SUM', 'header'])

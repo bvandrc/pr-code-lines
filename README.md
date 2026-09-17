@@ -41,11 +41,17 @@ Set both to run outside a `pull_request` event.
 
 ### Categories
 
+- **source** — the code the change is actually about: anything matching none of the patterns below.
+- **tests** — specs, fixtures, and mocks: `**/__tests__/**`, `**/*.test.*`, `**/*_test.*`, `**/spec/**`, `**/conftest.py`, …
+- **generated** — machine-written and committed: lockfiles, `**/dist/**`, `**/build/**`, `**/vendor/**`, `**/*.pb.go`, `**/__snapshots__/**`, `**/*.min.js`, …
+- **docs** — prose: `**/*.md`, `**/*.rst`, `**/*.adoc`, `**/docs/**`, `LICENSE*`
+- **config** — machine-read settings: `**/*.json`, `**/*.yml`, `**/*.toml`, `**/*.ini`, `**/.github/**`, `**/Dockerfile*`, `**/*.tfvars`
+
 The categories are matched **in order** — **tests**, then **generated**, then **docs**, then **config** — and the **first match wins** (i.e., a `.spec` file under a generated directory is still counted as a test). Anything matching none of them counts as **source**. This also means that an unfamiliar language or an extensionless file is counted rather than quietly dropped.
 
-`docs` is prose (`**/*.md`, `**/docs/**`, `LICENSE*`) and `config` is machine-read (`**/*.json`, `**/*.yml`, `**/.github/**`, `Dockerfile*`). They're separate because a 400-line `tsconfig.json` and a 400-line design doc are different news.
+`docs` and `config` are split because a 400-line `tsconfig.json` and a 400-line design doc are different news, and lumping them together made a workflow change read as documentation.
 
-The patterns are **not configurable yet** — every repo gets the same list, which keeps the numbers comparable between them. They live in `DEFAULT_CATEGORY_GLOBS` in `src/tally.ts` and cover the usual conventions across ecosystems (`**/__tests__/**`, `**/*_test.go`, `**/package-lock.json`, `**/dist/**`, …). Making them overridable is [issue #5](https://github.com/bvandrc/pr-code-lines/issues/5).
+The patterns are **not configurable yet** — every repo gets the same list, which keeps the numbers comparable between them. They live in `DEFAULT_CATEGORY_GLOBS` in `src/tally.ts`. Making them overridable is [issue #5](https://github.com/bvandrc/pr-code-lines/issues/5).
 
 ## Output
 

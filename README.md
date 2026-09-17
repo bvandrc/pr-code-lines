@@ -65,7 +65,7 @@ jobs:
         with:
           comment: false
 
-      - run: echo '${{ steps.lines.outputs.json }}' | jq .total
+      - run: echo '${{ fromJSON(steps.lines.outputs.json).byCategory.source.added.code }} lines of source code'
 ```
 
 CI here runs that path on every pull request, under `contents: read` alone, so it stays working.

@@ -1,14 +1,16 @@
 /**
  * @fileoverview Action entrypoint: counts the resolved range with cloc, sorts
- * the changed files into categories, and exposes the tally as one output.
+ * the changed files into categories, and reports the tally as outputs and a
+ * job summary.
  */
 
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { getInput, info, setFailed, setOutput } from '@actions/core'
+import { getInput, info, setFailed, setOutput, summary } from '@actions/core'
 import { context } from '@actions/github'
 
 import { runClocDiff } from './cloc/run.ts'
+import { githubDiffTotalsSchema, renderMarkdown } from './markdown.ts'
 import { resolveShaRange } from './sha.ts'
 import { DEFAULT_CATEGORY_GLOBS, tallyDiff } from './tally.ts'
 
@@ -26,7 +28,20 @@ async function run(): Promise<void> {
     reportPath: join(tmpdir(), 'pr-code-lines.json'),
   })
 
-  setOutput('json', JSON.stringify(tallyDiff(report, DEFAULT_CATEGORY_GLOBS)))
+  const tally = tallyDiff(report, DEFAULT_CATEGORY_GLOBS)
+
+  const markdown = renderMarkdown(tally, {
+    // Empty when a caller passes `title: ''`; the default belongs to renderMarkdown.
+    title: getInput('title') || undefined,
+    // Present only on the pull_request event. The payload is typed `any`, so the
+    // schema is what checks it -- and strips the other ~50 keys.
+    githubTotals: githubDiffTotalsSchema.safeParse(pullRequest).data,
+  })
+
+  setOutput('markdown', markdown)
+  setOutput('json', JSON.stringify(tally))
+
+  await summary.addRaw(markdown).write()
 }
 
 run().catch((error: unknown) => {

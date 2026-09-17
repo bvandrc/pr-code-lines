@@ -6,13 +6,14 @@
 import { getInput, info } from '@actions/core'
 import { context, getOctokit } from '@actions/github'
 
+/** Identifies our comment among the others on the pull request. */
+const MARKER = '<!-- pr-code-lines -->'
+
 /** Edits one comment in place across pushes instead of leaving a trail of them. */
 export async function postStickyComment({
   body,
-  header,
 }: {
   body: string
-  header: string
 }): Promise<void> {
   const token = getInput('github-token')
   const pullRequest = context.payload.pull_request
@@ -21,19 +22,17 @@ export async function postStickyComment({
     return
   }
 
-  const marker = `<!-- pr-code-lines: ${header} -->`
   const octokit = getOctokit(token)
-  const { owner, repo } = context.repo
+  const repo = context.repo
   const issue_number = pullRequest.number
 
   const existing = await octokit.paginate(octokit.rest.issues.listComments, {
-    owner,
-    repo,
+    ...repo,
     issue_number,
     per_page: 100,
   })
-  const previous = existing.find((comment) => comment.body?.includes(marker))
-  const withMarker = `${body}\n\n${marker}`
+  const previous = existing.find((comment) => comment.body?.includes(MARKER))
+  const withMarker = `${body}\n\n${MARKER}`
 
   if (previous) {
     if (previous.body === withMarker) {
@@ -41,8 +40,7 @@ export async function postStickyComment({
       return
     }
     await octokit.rest.issues.updateComment({
-      owner,
-      repo,
+      ...repo,
       comment_id: previous.id,
       body: withMarker,
     })
@@ -50,8 +48,7 @@ export async function postStickyComment({
   }
 
   await octokit.rest.issues.createComment({
-    owner,
-    repo,
+    ...repo,
     issue_number,
     body: withMarker,
   })

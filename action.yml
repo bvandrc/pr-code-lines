@@ -13,9 +13,6 @@ inputs:
   comment:
     description: Post the table as a sticky pull request comment.
     default: 'true'
-  comment-header:
-    description: Distinguishes this comment from others posted by the same action, so two workflows can each keep their own.
-    default: default
   title:
     description: Heading shown at the top of the comment and the job summary.
     default: PR code lines

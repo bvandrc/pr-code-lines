@@ -50071,9 +50071,9 @@ async function resolveShaRange({
 }
 
 // src/sticky-comment.ts
+var MARKER = "<!-- pr-code-lines -->";
 async function postStickyComment({
-  body,
-  header
+  body
 }) {
   const token = getInput("github-token");
   const pullRequest = context2.payload.pull_request;
@@ -50081,36 +50081,32 @@ async function postStickyComment({
     info("Not a pull request \u2014 skipping the comment.");
     return;
   }
-  const marker = `<!-- pr-code-lines: ${header} -->`;
   const octokit = getOctokit(token);
-  const { owner, repo } = context2.repo;
+  const repo = context2.repo;
   const issue_number = pullRequest.number;
   const existing = await octokit.paginate(octokit.rest.issues.listComments, {
-    owner,
-    repo,
+    ...repo,
     issue_number,
     per_page: 100
   });
-  const previous = existing.find((comment) => comment.body?.includes(marker));
+  const previous = existing.find((comment) => comment.body?.includes(MARKER));
   const withMarker = `${body}
 
-${marker}`;
+${MARKER}`;
   if (previous) {
     if (previous.body === withMarker) {
       info("Comment is already up to date.");
       return;
     }
     await octokit.rest.issues.updateComment({
-      owner,
-      repo,
+      ...repo,
       comment_id: previous.id,
       body: withMarker
     });
     return;
   }
   await octokit.rest.issues.createComment({
-    owner,
-    repo,
+    ...repo,
     issue_number,
     body: withMarker
   });
@@ -50141,10 +50137,7 @@ async function run() {
   setOutput("json", JSON.stringify(tally));
   await summary.addRaw(markdown).write();
   if (getBooleanInput("comment")) {
-    await postStickyComment({
-      body: markdown,
-      header: getInput("comment-header")
-    });
+    await postStickyComment({ body: markdown });
   }
 }
 run().catch((error63) => {

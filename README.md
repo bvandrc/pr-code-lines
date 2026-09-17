@@ -76,7 +76,6 @@ CI here runs that path on every pull request, under `contents: read` alone, so i
 | --- | --- | --- |
 | `github-token` | `${{ github.token }}` | Token used to post the comment. Needs `pull-requests: write`. |
 | `comment` | `true` | Post the table as a sticky comment. Set `false` to use only the outputs and job summary. |
-| `comment-header` | `default` | Distinguishes this comment from others by the same action, so two workflows can each keep their own. |
 | `title` | `PR code lines` | Heading on the comment and the job summary. |
 | `base-sha` | the PR's base | Revision to count from. The merge base of the two is what gets counted. |
 | `head-sha` | the PR's head | Revision to count to. |

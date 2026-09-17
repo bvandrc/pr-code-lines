@@ -150,17 +150,11 @@ Enough to gate on, with no `jq` step:
 
 `modified` counts a line changed in place **once**, rather than as an add plus a delete, so these numbers deliberately don't sum to GitHub's own `+/−`.
 
-## How it counts
-
-cloc is fetched from its upstream release as a single pinned Perl script, verified against a SHA-256 checksum before it runs, and cached between runs. It is deliberately **not** installed from the `cloc` npm package: that package's version numbers are decoupled from the tool's, and `cloc@2.06` installs cloc **1.86** — which reads a rename as a whole file added plus a whole file deleted, overstating any renaming PR by the moved file's entire length.
-
-Perl is present on all GitHub-hosted runners. On a self-hosted runner without it, the action fails with a clear message rather than reporting zeros.
-
 ## Limitations
 
 - **Renames** are only as good as `git`'s own rename detection; a heavily edited move may still read as an add plus a delete.
-- **Markdown and plain text have no comment syntax**, so their prose counts as `code`. That's why `**/*.md` is a docs pattern by default rather than a source one.
 - **Binary and unrecognized files** contribute nothing. A PR of nothing but images reports no counted line changes.
+- **Perl must be available.** Every GitHub-hosted runner has it; a self-hosted runner without it fails with a clear message rather than reporting zeros.
 - **A file cloc cannot diff fails the run.** cloc's diff cost climbs roughly quadratically with the number of changed lines, and it reports a file it gave up on as wholly removed while still exiting 0. The per-file budget is 300s, far above cloc's own 10s default, and any file that still exceeds it is named in an error rather than published as a count.
 
 ## Licence

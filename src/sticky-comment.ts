@@ -7,10 +7,13 @@ import { getInput, info } from '@actions/core'
 import { context, getOctokit } from '@actions/github'
 
 /** Edits one comment in place across pushes instead of leaving a trail of them. */
-export async function postStickyComment(
-  body: string,
+export async function postStickyComment({
+  body,
+  header,
+}: {
+  body: string
   header: string
-): Promise<void> {
+}): Promise<void> {
   const token = getInput('github-token')
   const pullRequest = context.payload.pull_request
   if (!pullRequest) {

@@ -52,7 +52,10 @@ async function run(): Promise<void> {
   await summary.addRaw(markdown).write()
 
   if (getBooleanInput('comment')) {
-    await postStickyComment(markdown, getInput('comment-header'))
+    await postStickyComment({
+      body: markdown,
+      header: getInput('comment-header'),
+    })
   }
 }
 

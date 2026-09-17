@@ -50071,7 +50071,10 @@ async function resolveShaRange({
 }
 
 // src/sticky-comment.ts
-async function postStickyComment(body, header) {
+async function postStickyComment({
+  body,
+  header
+}) {
   const token = getInput("github-token");
   const pullRequest = context2.payload.pull_request;
   if (!pullRequest) {
@@ -50138,7 +50141,10 @@ async function run() {
   setOutput("json", JSON.stringify(tally));
   await summary.addRaw(markdown).write();
   if (getBooleanInput("comment")) {
-    await postStickyComment(markdown, getInput("comment-header"));
+    await postStickyComment({
+      body: markdown,
+      header: getInput("comment-header")
+    });
   }
 }
 run().catch((error63) => {

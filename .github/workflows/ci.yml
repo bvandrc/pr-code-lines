@@ -65,8 +65,20 @@ jobs:
       # This repo's own pull requests are the action's first consumer: it counts
       # this diff and posts the comment, so a change is exercised before release.
       - uses: ./
+        id: lines
         with:
           title: PR code lines (self-test)
+
+      # Same check as the read-only job: the comment is posted by the action
+      # itself, so the outputs are what tells us this path produced real counts
+      # rather than an empty tally it rendered anyway.
+      - name: Check the counts came back
+        env:
+          JSON: ${{ steps.lines.outputs.json }}
+        run: |
+          echo "$JSON" | jq -e '.byCategory.source.added.code >= 0' > /dev/null
+          echo "$JSON" | jq -e '.total.added.code >= 0' > /dev/null
+          echo "$JSON" | jq -c '.total'
 
   self-test-read-only:
     name: Self-test (no comment)

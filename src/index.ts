@@ -31,7 +31,6 @@ async function run(): Promise<void> {
   const tally = tallyDiff(report, DEFAULT_CATEGORY_GLOBS)
 
   // Present only on the pull_request event, and only then worth contrasting.
-
   const githubTotals: GithubDiffTotals | undefined = (() => {
     if (!pullRequest) return undefined
     const { additions, deletions } = pullRequest

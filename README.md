@@ -68,6 +68,12 @@ jobs:
       - env:
           SOURCE_ADDED: ${{ fromJSON(steps.lines.outputs.json).byCategory.source.added.code }}
         run: echo "$SOURCE_ADDED lines of source code"
+
+      - name: Fail if there is too much new source to review
+        if: fromJSON(steps.lines.outputs.json).byCategory.source.added.code > 400
+        run: |
+          echo "::error::Over 400 lines of new source code -- split this pull request."
+          exit 1
 ```
 
 CI here runs that path on every pull request, under `contents: read` alone, so it stays working.

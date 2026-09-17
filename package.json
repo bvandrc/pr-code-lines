@@ -10,6 +10,7 @@
     "format": "npx biome check . --fix",
     "lint": "npx biome check .",
     "ts:check": "tsc",
+    "test": "npm run test:unit",
     "test:unit": "vitest run",
     "check": "npm run ts:check && npm run lint",
     "cloc:check": "tsx script/check-cloc-version.ts"

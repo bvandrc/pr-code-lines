@@ -23,23 +23,26 @@ const clocReport = (sections: PartialDeep<ClocDiffReport>): ClocDiffReport =>
 const codePerCategory = (tally: DiffTally) =>
   mapValues(tally.byCategory, (t) => t.added.code)
 
-const GLOBS: CategoryGlobs = {
+const GLOBS = {
   tests: ['**/__tests__/**', '**/*.test.*', '**/*.spec.*'],
   generated: ['**/package-lock.json', '**/migrations/**'],
   docs: ['**/*.md'],
   config: ['**/*.json', '**/*.yml'],
-}
+} as const satisfies CategoryGlobs
 
 describe('tallyDiff', () => {
-  it('keeps comment and blank lines out of the code counts', () => {
+  it('totals correctly', () => {
     const tally = tallyDiff(
       clocReport({
-        added: { 'src/thing.ts': { code: 10, comment: 40, blank: 3 } },
+        added: {
+          'src/thing.ts': { code: 10, comment: 40, blank: 3 },
+          'src/thing2.ts': { code: 10, comment: 40, blank: 3 },
+        },
       }),
       GLOBS
     )
 
-    expect(tally.total.added).toEqual({ code: 10, comment: 40, blank: 3 })
+    expect(tally.total.added).toEqual({ code: 20, comment: 80, blank: 6 })
   })
 
   it('routes each path to its category, and anything unmatched to source', () => {
@@ -47,10 +50,10 @@ describe('tallyDiff', () => {
       clocReport({
         added: {
           'src/thing.ts': { code: 5 },
-          'src/__tests__/thing.ts': { code: 30 },
+          'src/__tests__/thing.ts': { code: 30, comment: 40, blank: 3 },
           'e2e/login.spec.ts': { code: 20 },
-          'package-lock.json': { code: 900 },
-          'db/migrations/0007_add_schedule.sql': { code: 12 },
+          'package-lock.json': { code: 900, comment: 1 },
+          'db/migrations/0007_add_schedule.sql': { code: 12, blank: 3 },
           'README.md': { code: 4 },
           Makefile: { code: 3 },
         },
@@ -130,11 +133,12 @@ describe('tallyDiff', () => {
   })
 
   it('sums each change kind separately', () => {
+    const FILE = 'src/a.ts'
     const tally = tallyDiff(
       clocReport({
-        added: { 'src/a.ts': { code: 5 } },
-        modified: { 'src/a.ts': { code: 3 } },
-        removed: { 'src/a.ts': { code: 4 } },
+        added: { [FILE]: { code: 5 } },
+        modified: { [FILE]: { code: 3 } },
+        removed: { [FILE]: { code: 4 } },
       }),
       GLOBS
     )

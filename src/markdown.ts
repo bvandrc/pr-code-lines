@@ -97,7 +97,7 @@ export function renderMarkdown(
             ['−', 'code'],
             ['+', 'comment'],
             ['−', 'comment'],
-          ].map((sign, label) => `${sign}&nbsp;${label}`),
+          ].map(([sign, label]) => `${sign}&nbsp;${label}`),
         ],
         // rows
         ...rows,

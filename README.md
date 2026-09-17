@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 0 # the merge base has to be in the clone
+          fetch-depth: 0 # REQUIRED! The merge base has to be in the clone.
 
       - uses: bvandrc/pr-code-lines@v1
 ```
